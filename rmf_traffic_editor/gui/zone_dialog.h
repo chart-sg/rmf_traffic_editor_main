@@ -92,6 +92,11 @@ private:
   void update_entry_combobox();
   void update_internal_vertex_combobox();
 
+  /// True if internal_vertex names a zone vertex and external_vertex a level vertex (not placeholders).
+  bool transition_lane_vertices_valid(const ZoneTransitionLane& lane) const;
+  /// True if some valid entry lane row differs from some valid exit lane row.
+  bool has_valid_entry_and_exit_transition_lanes() const;
+
 private slots:
   void ok_button_clicked();
   void cancel_button_clicked();

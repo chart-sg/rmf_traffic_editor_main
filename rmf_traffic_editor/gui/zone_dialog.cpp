@@ -397,6 +397,16 @@ void ZoneDialog::ok_button_clicked()
     return;
   }
 
+  if (!has_valid_entry_and_exit_transition_lanes())
+  {
+    QMessageBox::critical(
+      this,
+      "Error",
+      "Configure at least two valid rows, with one row marked as entry "
+      "and another marked as exit.");
+    return;
+  }
+
   _zone.name = _name_line_edit->text().toStdString();
   _zone.level = _level_combo_box->currentText().toStdString();
   _zone.entry_point = _entry_combo_box->currentText().toStdString();
@@ -585,6 +595,15 @@ void ZoneDialog::update_transition_lane_table()
       &QAbstractButton::clicked,
       [this, i]()
       {
+        if (_zone.transition_lanes.size() <= 2)
+        {
+          QMessageBox::warning(
+            this,
+            "Cannot delete",
+            "At least two transition lanes are required "
+            "(internal ↔ external vertex each).");
+          return;
+        }
         _zone.transition_lanes.erase(_zone.transition_lanes.begin() + i);
         set_transition_lane_cell(_zone.transition_lanes.size(), 0, nullptr);
         set_transition_lane_cell(_zone.transition_lanes.size(), 1, nullptr);
@@ -636,6 +655,72 @@ void ZoneDialog::update_internal_vertex_combobox()
     _internal_vertex_combo_box->addItem(QString::fromStdString(vertex.name));
   }
 }
+
+bool ZoneDialog::transition_lane_vertices_valid(const ZoneTransitionLane& lane)
+const
+{
+  static const char* const k_internal_placeholder = "<select vertex>";
+  static const char* const k_external_placeholder = "Select vertex";
+
+  if (lane.internal_vertex.empty() ||
+    lane.internal_vertex == k_internal_placeholder)
+  {
+    return false;
+  }
+  if (lane.external_vertex.empty() ||
+    lane.external_vertex == k_external_placeholder)
+  {
+    return false;
+  }
+
+  bool internal_ok = false;
+  for (const auto& vertex : _zone.vertices)
+  {
+    if (vertex.name == lane.internal_vertex)
+    {
+      internal_ok = true;
+      break;
+    }
+  }
+  if (!internal_ok)
+  {
+    return false;
+  }
+
+  const QString external_q = QString::fromStdString(lane.external_vertex);
+  for (const QString& name : _vertex_names)
+  {
+    if (name == external_q)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ZoneDialog::has_valid_entry_and_exit_transition_lanes() const
+{
+  const ZoneTransitionLane* entry = nullptr;
+  const ZoneTransitionLane* exit = nullptr;
+
+  for (const auto& lane : _zone.transition_lanes)
+  {
+    if (!transition_lane_vertices_valid(lane))
+      continue;
+
+    if (lane.is_entry_lane && entry == nullptr)
+      entry = &lane;
+    else if(lane.is_exit_lane && exit == nullptr)
+      exit = &lane;
+
+    // If both found and not the same lane
+    if (entry && exit && entry != exit)
+      return true;
+  }
+
+  return false;
+}
+
 // ======================================================================================================================
 void ZoneDialog::set_vertex_cell(const int row, const int col,
   const QString& text)
