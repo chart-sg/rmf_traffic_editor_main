@@ -102,23 +102,6 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
   _level_combo_box->setToolTip("Level which the zone is in.");
   level_hbox->addWidget(_level_combo_box);
 
-  QHBoxLayout* zone_type_hbox = new QHBoxLayout;
-  zone_type_hbox->addWidget(new QLabel("Zone type:"));
-  _zone_type_box = new QComboBox;
-  _zone_type_box->addItem(QString("Default"));
-  _zone_type_box->addItem(QString("Parking zone"));
-
-  _zone_type_box->setCurrentText(
-    QString::fromStdString(_zone.type));
-  connect(
-    _zone_type_box,
-    &QComboBox::currentTextChanged,
-    [this](const QString& text)
-    {
-      _zone.type = text.toStdString();
-    });
-  zone_type_hbox->addWidget(_zone_type_box);
-
   QHBoxLayout* x_hbox = new QHBoxLayout;
   x_hbox->addWidget(new QLabel("X (pixel):"));
   _x_line_edit =
@@ -333,7 +316,6 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
 
   QVBoxLayout* left_vbox = new QVBoxLayout;
   left_vbox->addLayout(name_hbox);
-  left_vbox->addLayout(zone_type_hbox);
   left_vbox->addLayout(level_hbox);
   left_vbox->addLayout(width_hbox);
   left_vbox->addLayout(depth_hbox);

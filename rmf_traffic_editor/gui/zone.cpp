@@ -83,15 +83,6 @@ void Zone::from_yaml(
   yaw = data["yaw"].as<double>();
   level = data["level"].as<string>();
 
-  switch (data["type"].as<int>())
-  {
-    case 1:
-      type = "Parking zone";
-      break;
-    default:
-      type = "Default";
-  }
-
   for (const auto& map_level : levels)
   {
     if (map_level.name == level)
@@ -138,11 +129,6 @@ YAML::Node Zone::to_yaml() const
   n["level"] = level;
   n["width"] = std::round(width * 1000.0) / 1000.0;
   n["depth"] = std::round(depth * 1000.0) / 1000.0;
-
-  if (type == "Parking zone")
-    n["type"] = 1;
-  else
-    n["type"] = 0;
 
   n["vertices"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& vertex : vertices)

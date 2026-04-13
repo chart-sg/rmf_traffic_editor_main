@@ -17,13 +17,7 @@ class Zone:
             float(yaml_node['y'] * coordinate_system.y_flip_scalar()),
         )
         self.x, self.y = transform.transform_point(self.raw_pos)
-
-        match int(yaml_node['type']):
-            case 0:
-                self.type = 'Default'
-            case 1:
-                self.type = 'Parking zone'
-
+        self.type = 'Default'
         self.vertices = {}
         if 'vertices' in yaml_node:
             self.vertices = self.parse_vertices(yaml_node)
@@ -83,8 +77,6 @@ class Zone:
 
             p = {}
             p['name'] = unique_vertex_name
-            if self.type == 'Parking zone':
-                p['is_parking_spot'] = True
 
             vertices[vertice_name] = {
                 'name': unique_vertex_name,

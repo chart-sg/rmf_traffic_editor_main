@@ -470,8 +470,6 @@ class Building:
                     'priority': v['priority'],
                     'group': v['group']
                 }
-                if zone.type == 'Parking zone':
-                    v_property['is_parking_spot'] = True
                 level_yaml['vertices'].append([v['location'][0], v['location'][1], v_property])
 
             # Search for transition lane connections

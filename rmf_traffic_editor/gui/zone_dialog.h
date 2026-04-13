@@ -53,7 +53,6 @@ private:
   std::vector<double> _level_elevations;
 
   QLineEdit* _name_line_edit;
-  QComboBox* _zone_type_box;
   QComboBox* _entry_combo_box;
   QComboBox* _internal_vertex_combo_box;
   QComboBox* _external_vertex_combo_box;
