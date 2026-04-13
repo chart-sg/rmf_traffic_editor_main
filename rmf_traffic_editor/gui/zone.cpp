@@ -43,7 +43,7 @@ void ZoneVertex::from_yaml(const std::string& _name, const YAML::Node& data)
   name = _name;
   x = data["x"].as<double>();
   y = data["y"].as<double>();
-  priority = data["priority"].as<int>();
+  priority = data["priority"].as<std::size_t>();
   group = data["group"].as<std::string>();
 }
 
@@ -207,8 +207,6 @@ void Zone::draw(
       // add some icons depending on the superpowers of this vertex
       QPen annotation_pen(Qt::black);
       annotation_pen.setWidthF(radius / 4.0);
-      const double icon_ring_radius = radius * 2.5;
-      const double icon_scale = 2.0 * radius / 128.0;
 
       items.append(ellipse_item);
 

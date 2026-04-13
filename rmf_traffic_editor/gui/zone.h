@@ -35,7 +35,7 @@ public:
 
   double x = 0.0;  // x location of vertex in meters
   double y = 0.0;  // y location of vertex in meters
-  int priority = 0; // Priority of vertex
+  std::size_t priority = 0; // Priority of vertex
   std::string group = "Default";  // group label of the vertex
 
   YAML::Node to_yaml() const;
@@ -77,8 +77,8 @@ public:
   bool show_vertices = true;                  // Visual marker. Used to hide or show verticse in the zone
   bool show_zone = true;                      // Visual marker. Used to hide or show the zone
 
-  double external_entry_point_x;              // x coordinate of the external entry point in the global frame in pixels
-  double external_entry_point_y;              // y coordinate of the external entry point in the global frame in pixels
+  double external_entry_point_x = 0.0;              // x coordinate of the external entry point in the global frame in pixels
+  double external_entry_point_y = 0.0;              // y coordinate of the external entry point in the global frame in pixels
 
   std::vector<ZoneVertex> vertices;           // Vertices in the zone
 

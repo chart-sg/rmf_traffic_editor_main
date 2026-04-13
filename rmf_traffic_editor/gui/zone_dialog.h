@@ -63,9 +63,9 @@ private:
   QLineEdit* _yaw_line_edit;
   QLineEdit* _width_line_edit;
   QLineEdit* _depth_line_edit;
-  QComboBox* priority_box;
-  QCheckBox* lanecheckbox;
-  QCheckBox* vertexcheckbox;
+  QComboBox* _priority_box;
+  QCheckBox* _exit_lanecheckbox;
+  QCheckBox* _vertexcheckbox;
 
   QTableWidget* _vertex_table;
   QTableWidget* _transition_lane_table;

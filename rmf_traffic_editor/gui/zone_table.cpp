@@ -86,16 +86,12 @@ void ZoneTable::update(Building& building)
       &QAbstractButton::clicked,
       [this, &building, i]()
       {
-        auto it = building.zones.begin();
-        for (size_t j = 0; j < building.zones.size(); j++)
+        if (i < building.zones.size())
         {
-          if (j == i)
-          {
-            building.zones.erase(building.zones.begin() + i);
-          }
+          building.zones.erase(building.zones.begin() + i);
+          update(building);
+          emit redraw();
         }
-        update(building);
-        emit redraw();
       });
   }
 

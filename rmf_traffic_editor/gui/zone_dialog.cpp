@@ -89,7 +89,7 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
     [this](const QString& text)
     {
       _zone.level = text.toStdString();
-      for (int i = 0; i < _level_names.size(); i++)
+      for (std::size_t i = 0; i < _level_names.size(); i++)
       {
         if (text == _level_names[i])
         {
@@ -214,7 +214,7 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
     [this](const QString& text)
     {
       _zone.external_entry_point = text.toStdString();
-      for (int i = 0; i < _vertex_names.size(); i++)
+      for (std::size_t i = 0; i < _vertex_names.size(); i++)
       {
         if (_vertex_names[i].toStdString() == _zone.external_entry_point)
         {
@@ -229,10 +229,10 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
 
   QHBoxLayout* show_vertices_hbox = new QHBoxLayout;
   show_vertices_hbox->addWidget(new QLabel("Show vertices:"));
-  QCheckBox* vertexcheckbox = new QCheckBox;
-  vertexcheckbox->setChecked(_zone.show_vertices);
+  _vertexcheckbox = new QCheckBox;
+  _vertexcheckbox->setChecked(_zone.show_vertices);
   connect(
-    vertexcheckbox,
+    _vertexcheckbox,
     &QAbstractButton::clicked,
     [this](bool box_checked)
     {
@@ -240,7 +240,7 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
       update_zone_view();
       emit redraw();
     });
-  show_vertices_hbox->addWidget(vertexcheckbox);
+  show_vertices_hbox->addWidget(_vertexcheckbox);
 
   _level_table = new QTableWidget;
   _level_table->setMinimumSize(200, 200);
@@ -395,7 +395,7 @@ void ZoneDialog::ok_button_clicked()
   _zone.external_entry_point =
     _external_entry_combo_box->currentText().toStdString();
 
-  for (int i = 0; i < _level_names.size(); i++)
+  for (std::size_t i = 0; i < _level_names.size(); i++)
   {
     if (_level_names[i].toStdString() == _zone.level)
     {
@@ -441,14 +441,14 @@ void ZoneDialog::update_vertex_table()
     // set the group name
     set_vertex_cell(i, 3, QString::fromStdString(vertex.group));
 
-    priority_box = new QComboBox;
+    _priority_box = new QComboBox;
     for (std::size_t j = 0; j < _zone.vertices.size(); j++)
     {
-      priority_box->addItem(QString::number(j+1));
+      _priority_box->addItem(QString::number(j+1));
     }
-    priority_box->setCurrentText(QString::number(vertex.priority));
+    _priority_box->setCurrentText(QString::number(vertex.priority));
     connect(
-      priority_box,
+      _priority_box,
       &QComboBox::currentTextChanged,
       [this, i](const QString& text)
       {
@@ -457,7 +457,7 @@ void ZoneDialog::update_vertex_table()
         update_zone_view();
         emit redraw();
       });
-    _vertex_table->setCellWidget(i, 4, priority_box);
+    _vertex_table->setCellWidget(i, 4, _priority_box);
 
     QPushButton* delete_button = new QPushButton("Delete...", this);
     _vertex_table->setCellWidget(i, 5, delete_button);
@@ -546,28 +546,28 @@ void ZoneDialog::update_transition_lane_table()
       });
     _transition_lane_table->setCellWidget(i, 1, _external_vertex_combo_box);
 
-    QCheckBox* exitlanecheckbox = new QCheckBox;
-    exitlanecheckbox->setChecked(lane.is_exit_lane);
+    _exit_lanecheckbox = new QCheckBox;
+    _exit_lanecheckbox->setChecked(lane.is_exit_lane);
     connect(
-      exitlanecheckbox,
+      _exit_lanecheckbox,
       &QAbstractButton::clicked,
       [this, i](bool box_checked)
       {
         _zone.transition_lanes[i].is_exit_lane = box_checked;
       });
-    _transition_lane_table->setCellWidget(i, 2, exitlanecheckbox);
+    _transition_lane_table->setCellWidget(i, 2, _exit_lanecheckbox);
 
 
-    QCheckBox* entrylanecheckbox = new QCheckBox;
-    entrylanecheckbox->setChecked(lane.is_entry_lane);
+    QCheckBox* entry_lanecheckbox = new QCheckBox;
+    entry_lanecheckbox->setChecked(lane.is_entry_lane);
     connect(
-      entrylanecheckbox,
+      entry_lanecheckbox,
       &QAbstractButton::clicked,
       [this, i](bool box_checked)
       {
         _zone.transition_lanes[i].is_entry_lane = box_checked;
       });
-    _transition_lane_table->setCellWidget(i, 3, entrylanecheckbox);
+    _transition_lane_table->setCellWidget(i, 3, entry_lanecheckbox);
 
     QPushButton* delete_button = new QPushButton("Delete...", this);
     _transition_lane_table->setCellWidget(i, 4, delete_button);
