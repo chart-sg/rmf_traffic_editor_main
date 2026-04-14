@@ -385,7 +385,8 @@ void ZoneDialog::ok_button_clicked()
       this,
       "Error",
       "Configure at least two valid rows, with one row marked as entry "
-      "and another marked as exit.");
+      "and another marked as exit. Two rows doesn't share the same "
+      "external vertex");
     return;
   }
 
@@ -696,7 +697,7 @@ bool ZoneDialog::has_valid_entry_and_exit_transition_lanes() const
       exit = &lane;
 
     // If both found and not the same lane
-    if (entry && exit && entry != exit)
+    if (entry && exit && entry != exit && entry->external_vertex != exit->external_vertex)
       return true;
   }
 
