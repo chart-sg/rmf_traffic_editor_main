@@ -49,12 +49,12 @@ class Zone:
         vertex_yaml = vertices_yaml[desired_vertex_name]
         return (
             self.name
-            + '_'
-            + desired_vertex_name
-            + '_'
+            + '#'
             + vertex_yaml['group']
-            + '_p'
+            + '#p'
             + str(vertex_yaml['priority'])
+            + '#'
+            + desired_vertex_name
         )
 
     def parse_vertices(self, yaml_node):
