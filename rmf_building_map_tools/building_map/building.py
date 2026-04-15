@@ -497,13 +497,13 @@ class Building:
                     level_yaml['lanes'].append(
                         copy.deepcopy(
                             [connecting_lane[0],connecting_lane[1],
-                            {'zone_name': zone.name + '_entry','speed_limit': 0}]))
+                            {'zone_name': zone.name,'speed_limit': 0, 'zone_transition_lane': 'entry'}]))
 
                 if tl['is_exit_lane']:
                     level_yaml['lanes'].append(
                         copy.deepcopy(
                             [connecting_lane[1],connecting_lane[0],
-                            {'zone_name': zone.name + '_exit','speed_limit': 0}]))
+                            {'zone_name': zone.name,'speed_limit': 0, 'zone_transition_lane': 'exit'}]))
 
     def generate_sdf_world(self, template_file, skip_camera_pose):
         """ Return an etree of this Building in SDF starting from a template"""
