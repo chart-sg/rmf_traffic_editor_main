@@ -370,6 +370,20 @@ ZoneDialog::~ZoneDialog()
 {
 }
 
+bool ZoneDialog::is_zone_name_unique(const std::string& name) const
+{
+  for (const auto& zone : _building.zones)
+  {
+    // skip comparing with itself (important when editing existing zone)
+    if (&zone == &_zone)
+      continue;
+
+    if (zone.name == name)
+      return false;
+  }
+  return true;
+}
+
 // ======================================================================================================================
 void ZoneDialog::ok_button_clicked()
 {
@@ -411,6 +425,12 @@ void ZoneDialog::ok_button_clicked()
 
   _zone.width = _width_line_edit->text().toDouble();
   _zone.depth = _depth_line_edit->text().toDouble();
+
+  if (!is_zone_name_unique(_name_line_edit->text().toStdString()))
+  {
+    QMessageBox::critical(this, "Error", "Zone name must be unique");
+    return;
+  }
 
   update_zone_view();
   emit redraw();
@@ -732,6 +752,19 @@ void ZoneDialog::update_level_table()
   }
 }
 // ======================================================================================================================
+bool ZoneDialog::is_vertex_name_unique(const std::string& name, int ignore_index) const
+{
+  for (std::size_t i = 0; i < _zone.vertices.size(); ++i)
+  {
+    if (static_cast<int>(i) == ignore_index)
+      continue;  // skip itself when editing
+
+    if (_zone.vertices[i].name == name)
+      return false;
+  }
+  return true;
+}
+// ======================================================================================================================
 void ZoneDialog::vertex_table_cell_changed(int row, int col)
 {
   // printf("vertex_table_cell_changed(%d, %d)\n", row, col);
@@ -745,8 +778,27 @@ void ZoneDialog::vertex_table_cell_changed(int row, int col)
   // the level_table combo boxes
   if (col == 0)  // name
   {
-    _zone.vertices[row].name =
+    std::string new_name =
       _vertex_table->item(row, col)->text().toStdString();
+
+    if (new_name.empty())
+    {
+      QMessageBox::warning(this, "Invalid name", "Vertex name cannot be empty");
+      return;
+    }
+
+    if (!is_vertex_name_unique(new_name, row))
+    {
+      QMessageBox::warning(this, "Duplicate name", "Vertex name must be unique");
+
+      // revert to previous value
+      _vertex_table->item(row, col)->setText(
+        QString::fromStdString(_zone.vertices[row].name));
+      return;
+    }
+
+    _zone.vertices[row].name = new_name;
+
     update_entry_combobox();
     update_level_table();
   }

@@ -95,6 +95,10 @@ private:
   bool transition_lane_vertices_valid(const ZoneTransitionLane& lane) const;
   /// True if some valid entry lane row differs from some valid exit lane row.
   bool has_valid_entry_and_exit_transition_lanes() const;
+  /// True if zone name is unique
+  bool is_zone_name_unique(const std::string& name) const;
+
+  bool is_vertex_name_unique(const std::string& name, int ignore_index) const;
 
 private slots:
   void ok_button_clicked();
