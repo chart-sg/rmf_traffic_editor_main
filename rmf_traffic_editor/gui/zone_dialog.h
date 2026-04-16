@@ -65,6 +65,7 @@ private:
   QLineEdit* _depth_line_edit;
   QComboBox* _priority_box;
   QCheckBox* _exit_lanecheckbox;
+  QCheckBox* _entry_lanecheckbox;
   QCheckBox* _vertexcheckbox;
 
   QTableWidget* _vertex_table;

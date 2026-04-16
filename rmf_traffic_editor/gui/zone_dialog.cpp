@@ -584,16 +584,16 @@ void ZoneDialog::update_transition_lane_table()
     _transition_lane_table->setCellWidget(i, 2, _exit_lanecheckbox);
 
 
-    QCheckBox* entry_lanecheckbox = new QCheckBox;
-    entry_lanecheckbox->setChecked(lane.is_entry_lane);
+    _entry_lanecheckbox = new QCheckBox;
+    _entry_lanecheckbox->setChecked(lane.is_entry_lane);
     connect(
-      entry_lanecheckbox,
+      _entry_lanecheckbox,
       &QAbstractButton::clicked,
       [this, i](bool box_checked)
       {
         _zone.transition_lanes[i].is_entry_lane = box_checked;
       });
-    _transition_lane_table->setCellWidget(i, 3, entry_lanecheckbox);
+    _transition_lane_table->setCellWidget(i, 3, _entry_lanecheckbox);
 
     QPushButton* delete_button = new QPushButton("Delete...", this);
     _transition_lane_table->setCellWidget(i, 4, delete_button);
