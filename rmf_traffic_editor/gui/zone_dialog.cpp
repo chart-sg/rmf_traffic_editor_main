@@ -398,9 +398,8 @@ void ZoneDialog::ok_button_clicked()
     QMessageBox::critical(
       this,
       "Error",
-      "Configure at least two valid rows, with one row marked as entry "
-      "and another marked as exit. Two rows doesn't share the same "
-      "external vertex");
+      "Each internal vertex must have at least one entry lane and "
+      "one exit lane.\n\nThey cannot share the same external vertex.");
     return;
   }
 
