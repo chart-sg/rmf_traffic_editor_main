@@ -709,22 +709,45 @@ const
 
 bool ZoneDialog::has_valid_entry_and_exit_transition_lanes() const
 {
-  const ZoneTransitionLane* entry = nullptr;
-  const ZoneTransitionLane* exit = nullptr;
-
-  for (const auto& lane : _zone.transition_lanes)
+  // Check that each internal vertex has at least one entry lane and one exit lane
+  for (const auto& vertex : _zone.vertices)
   {
-    if (!transition_lane_vertices_valid(lane))
+    int entry_count = 0;
+    int exit_count = 0;
+    
+    for (const auto& lane : _zone.transition_lanes)
+    {
+      if (!transition_lane_vertices_valid(lane))
+        continue;
+      
+      if (lane.internal_vertex == vertex.name)
+      {
+        if (lane.is_entry_lane)
+          entry_count++;
+        if (lane.is_exit_lane)
+          exit_count++;
+      }
+    }
+    
+    if (entry_count < 1 || exit_count < 1)
+      return false;
+  }
+
+  // Also check that there's at least one entry lane and one exit lane (can be the same lane)
+  // with different external vertices
+  for (const auto& entry_lane : _zone.transition_lanes)
+  {
+    if (!entry_lane.is_entry_lane)
       continue;
 
-    if (lane.is_entry_lane && entry == nullptr)
-      entry = &lane;
-    else if(lane.is_exit_lane && exit == nullptr)
-      exit = &lane;
+    for (const auto& exit_lane : _zone.transition_lanes)
+    {
+      if (!exit_lane.is_exit_lane)
+        continue;
 
-    // If both found and not the same lane
-    if (entry && exit && entry != exit && entry->external_vertex != exit->external_vertex)
-      return true;
+      if (entry_lane.external_vertex != exit_lane.external_vertex)
+        return true;
+    }
   }
 
   return false;
