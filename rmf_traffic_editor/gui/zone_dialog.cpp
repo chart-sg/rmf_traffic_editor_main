@@ -513,6 +513,12 @@ void ZoneDialog::update_vertex_table()
     &QAbstractButton::clicked,
     [this]()
     {
+      if (!is_vertex_name_unique("name", -1))
+      {
+        QMessageBox::warning(this, "Duplicate name", 
+          "A vertex with the name 'name' already exists. Please change the name of existing vertex first.");
+        return;
+      }
       ZoneVertex vertex;
       vertex.name = "name";
       vertex.priority = _zone.vertices.size()+1;
