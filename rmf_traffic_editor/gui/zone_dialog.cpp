@@ -514,8 +514,9 @@ void ZoneDialog::update_vertex_table()
     {
       if (!is_vertex_name_unique("name", -1))
       {
-        QMessageBox::warning(this, "Duplicate name", 
-          "A vertex with the name 'name' already exists. Please change the name of existing vertex first.");
+        QMessageBox::warning(this, "Duplicate name",
+        "A vertex with the name 'name' already exists."
+        " Please change the name of existing vertex first.");
         return;
       }
       ZoneVertex vertex;
@@ -713,12 +714,12 @@ bool ZoneDialog::has_valid_entry_and_exit_transition_lanes() const
   {
     int entry_count = 0;
     int exit_count = 0;
-    
+
     for (const auto& lane : _zone.transition_lanes)
     {
       if (!transition_lane_vertices_valid(lane))
         continue;
-      
+
       if (lane.internal_vertex == vertex.name)
       {
         if (lane.is_entry_lane)
@@ -727,7 +728,7 @@ bool ZoneDialog::has_valid_entry_and_exit_transition_lanes() const
           exit_count++;
       }
     }
-    
+
     if (entry_count < 1 || exit_count < 1)
       return false;
   }
@@ -780,12 +781,14 @@ void ZoneDialog::update_level_table()
   }
 }
 // ======================================================================================================================
-bool ZoneDialog::is_vertex_name_unique(const std::string& name, int ignore_index) const
+bool ZoneDialog::is_vertex_name_unique(const std::string& name,
+  int ignore_index) const
 {
   for (std::size_t i = 0; i < _zone.vertices.size(); ++i)
   {
+    // skip itself when editing
     if (static_cast<int>(i) == ignore_index)
-      continue;  // skip itself when editing
+      continue;
 
     if (_zone.vertices[i].name == name)
       return false;
@@ -817,7 +820,8 @@ void ZoneDialog::vertex_table_cell_changed(int row, int col)
 
     if (!is_vertex_name_unique(new_name, row))
     {
-      QMessageBox::warning(this, "Duplicate name", "Vertex name must be unique");
+      QMessageBox::warning(this, "Duplicate name",
+        "Vertex name must be unique");
 
       // revert to previous value
       _vertex_table->item(row, col)->setText(

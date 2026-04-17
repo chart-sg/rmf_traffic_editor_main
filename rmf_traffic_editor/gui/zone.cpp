@@ -101,7 +101,8 @@ void Zone::from_yaml(
     for (YAML::const_iterator it = yd.begin(); it != yd.end(); ++it)
     {
       ZoneVertex vertex;
-      std::cout << "Loading vertex " << it->first.as<string>() << " for zone " << name << std::endl;
+      std::cout << "Loading vertex " << it->first.as<string>() <<
+        " for zone " << name << std::endl;
       vertex.from_yaml(it->first.as<string>(), it->second);
       vertices.push_back(vertex);
     }
