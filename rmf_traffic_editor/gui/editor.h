@@ -49,6 +49,7 @@ class LevelTable;
 class MapView;
 class Level;
 class LiftTable;
+class ZoneTable;
 class TrafficTable;
 class CrowdSimTable;
 
@@ -117,7 +118,6 @@ private:
     TOOL_ROTATE,
     TOOL_ADD_FLOOR,
     TOOL_EDIT_POLYGON,
-    TOOL_ADD_ZONE,
     TOOL_ADD_FEATURE,
     TOOL_ADD_CONSTRAINT,
     TOOL_ADD_FIDUCIAL,
@@ -210,6 +210,7 @@ private:
   LevelTable* level_table = nullptr;
   LayerTable* layer_table = nullptr;
   LiftTable* lift_table = nullptr;
+  ZoneTable* zone_table = nullptr;
   TrafficTable* traffic_table = nullptr;
   CrowdSimEditorTable* crowd_sim_table = nullptr;
 

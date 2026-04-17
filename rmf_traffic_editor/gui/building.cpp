@@ -152,6 +152,18 @@ bool Building::load(const string& _filename)
     }
   }
 
+  zones.clear();
+  if (y["zones"] && y["zones"].IsMap())
+  {
+    const YAML::Node& y_zones = y["zones"];
+    for (YAML::const_iterator it = y_zones.begin(); it != y_zones.end(); ++it)
+    {
+      Zone zone;
+      zone.from_yaml(it->first.as<string>(), it->second, levels);
+      zones.push_back(zone);
+    }
+  }
+
   if (y["graphs"] && y["graphs"].IsMap())
   {
     const YAML::Node& g_map = y["graphs"];
@@ -199,6 +211,12 @@ bool Building::save()
     y["lifts"][lift.name] = lift.to_yaml();
   if (lifts.empty())
     y["lifts"].SetStyle(YAML::EmitterStyle::Flow);
+
+  y["zones"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto& zone : zones)
+    y["zones"][zone.name] = zone.to_yaml();
+  if (zones.empty())
+    y["zones"].SetStyle(YAML::EmitterStyle::Flow);
 
   if (crowd_sim_impl)
     y["crowd_sim"] = crowd_sim_impl->to_yaml();
@@ -433,6 +451,150 @@ void Building::draw_lifts(QGraphicsScene* scene, const int level_idx)
       t.dx,
       t.dy,
       t.rotation);
+  }
+}
+
+void Building::draw_zones(const RenderingOptions& rendering_options,
+  QGraphicsScene* scene, const int level_idx)
+{
+  const Level& level = levels[level_idx];
+  for (const auto& zone : zones)
+  {
+    // find the level index referenced by the zone
+    int reference_floor_idx = -1;
+    for (std::size_t i = 0; i < levels.size(); i++)
+    {
+      if (levels[i].name == zone.level)
+      {
+        reference_floor_idx = static_cast<int>(i);
+        break;
+      }
+    }
+
+    Transform t;
+    if (reference_floor_idx >= 0)
+      t = get_transform(reference_floor_idx, level_idx);
+
+    zone.draw(
+      scene,
+      level.drawing_meters_per_pixel,
+      level.name,
+      level.elevation,
+      true,
+      t.scale,
+      t.dx,
+      t.dy);
+
+    if (level.name == zone.level)
+    {
+
+      if (!zone.show_zone)
+        continue;
+
+      for (const auto& lane : zone.transition_lanes)
+      {
+        double internal_x;
+        double internal_y;
+        double external_x;
+        double external_y;
+        for (const auto& vertex : zone.vertices)
+        {
+          if (lane.internal_vertex == vertex.name)
+          {
+            double rotation;
+            rotation = - zone.yaw - M_PI/2;
+            internal_x =
+              (-vertex.y/level.drawing_meters_per_pixel*
+              cos(rotation) -
+              vertex.x/level.drawing_meters_per_pixel
+              *sin(rotation) + zone.x) * t.scale + t.dx;
+            internal_y =
+              (vertex.x/level.drawing_meters_per_pixel*
+              cos(rotation) -
+              vertex.y/level.drawing_meters_per_pixel*
+              sin(rotation) + zone.y) * t.scale + t.dy;
+            break;
+          }
+        }
+
+        for (const auto& vertex : level.vertices)
+        {
+          if (lane.external_vertex == vertex.name)
+          {
+            external_x = vertex.x;
+            external_y = vertex.y;
+            break;
+          }
+        }
+
+        const double lane_pen_width = 0.5 / level.drawing_meters_per_pixel;
+        const QPen arrow_pen(QBrush(QColor::fromRgbF(0.0, 0.0, 0.0, 0.4)),
+          lane_pen_width, Qt::SolidLine, Qt::RoundCap);
+        QGraphicsLineItem* transition_lane = scene->addLine(internal_x,
+            internal_y,
+            external_x,
+            external_y,
+            arrow_pen);
+
+        if (!lane.is_exit_lane || !lane.is_entry_lane)
+        {
+          double dx;
+          double dy;
+          if (!lane.is_exit_lane)
+          {
+            dx = internal_x - external_x;
+            dy = internal_y - external_y;
+          }
+          if (!lane.is_entry_lane)
+          {
+            dx = external_x - internal_x;
+            dy = external_y - internal_y;
+          }
+          const double len = std::sqrt(dx*dx + dy*dy);
+          const double lane_pen_width = 0.5 / level.drawing_meters_per_pixel;
+          const double norm_x = dx / len;
+          const double norm_y = dy / len;
+
+          const QPen arrow_pen(
+            QBrush(QColor::fromRgbF(0.0, 0.0, 0.0, 0.5)),
+            lane_pen_width / 8);
+
+          // dimensions for the direction indicators along this path
+          const double arrow_w = lane_pen_width / 2.5;  // width of arrowheads
+          const double arrow_l = lane_pen_width / 2.5;  // length of arrowheads
+          const double arrow_spacing = lane_pen_width * 4.0;
+
+          for (double d = 0.0; d < len; d += arrow_spacing)
+          {
+            // first calculate the center vertex of this arrowhead
+            double cx;
+            double cy;
+            if (!lane.is_entry_lane)
+            {
+              cx = internal_x + d * norm_x;
+              cy = internal_y + d * norm_y;
+            }
+            if (!lane.is_exit_lane)
+            {
+              cx = external_x + d * norm_x;
+              cy = external_y + d * norm_y;
+            }
+            // one edge vertex of arrowhead
+            const double e1x = cx - arrow_w * norm_y;
+            const double e1y = cy + arrow_w * norm_x;
+            // another edge vertex of arrowhead
+            const double e2x = cx + arrow_w * norm_y;
+            const double e2y = cy - arrow_w * norm_x;
+            // tip of arrowhead
+            const double tx = cx + arrow_l * norm_x;
+            const double ty = cy + arrow_l * norm_y;
+            // now add arrowhead lines
+            scene->addLine(e1x, e1y, tx, ty, arrow_pen);
+            scene->addLine(e2x, e2y, tx, ty, arrow_pen);
+          }
+        }
+      }
+    }
   }
 }
 
@@ -790,6 +952,7 @@ void Building::draw(
     coordinate_system);
 
   draw_lifts(scene, level_idx);
+  draw_zones(rendering_options, scene, level_idx);
 }
 
 Polygon* Building::get_selected_polygon(const int level_idx)
