@@ -347,8 +347,6 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
 
   setLayout(top_vbox);
 
-  _name_line_edit->setFocus(Qt::OtherFocusReason);
-
   update_vertex_table();
   update_transition_lane_table();
   update_level_table();
@@ -363,6 +361,7 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
 
   update_zone_view();
   adjustSize();
+  _ok_button->setFocus(Qt::OtherFocusReason);
 }
 
 // ======================================================================================================================
