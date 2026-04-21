@@ -60,8 +60,6 @@ class Zone
 {
 public:
   std::string name;                           // Name of the zone
-  std::string entry_point;                    // Name of the vertex used as an zone entry point
-  std::string external_entry_point;           // Name of the vertex used as an zone entry point from the outside
   std::string level;                          // Which level the zone is at
   std::string type;                           // What kind of zone it is
 
@@ -76,9 +74,6 @@ public:
 
   bool show_vertices = true;                  // Visual marker. Used to hide or show verticse in the zone
   bool show_zone = true;                      // Visual marker. Used to hide or show the zone
-
-  double external_entry_point_x = 0.0;              // x coordinate of the external entry point in the global frame in pixels
-  double external_entry_point_y = 0.0;              // y coordinate of the external entry point in the global frame in pixels
 
   std::vector<ZoneVertex> vertices;           // Vertices in the zone
 

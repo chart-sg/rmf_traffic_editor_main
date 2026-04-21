@@ -97,7 +97,6 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
         }
       }
       emit redraw();
-
     });
   _level_combo_box->setToolTip("Level which the zone is in.");
   level_hbox->addWidget(_level_combo_box);
@@ -115,7 +114,7 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
       emit redraw();
     });
   _x_line_edit->setToolTip(
-    "This <X> refers to either the global <X> of the zone");
+    "This <X> refers to the global <X> of the zone");
   x_hbox->addWidget(_x_line_edit);
 
   QHBoxLayout* y_hbox = new QHBoxLayout;
@@ -131,7 +130,7 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
       emit redraw();
     });
   _y_line_edit->setToolTip(
-    "This <Y> refers to either the global <Y> of the zone");
+    "This <Y> refers to  the global <Y> of the zone");
   y_hbox->addWidget(_y_line_edit);
 
   QHBoxLayout* yaw_hbox = new QHBoxLayout;
@@ -148,7 +147,7 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
       emit redraw();
     });
   _yaw_line_edit->setToolTip(
-    "This <Yaw> refers to either the global <Yaw> of the zone.\n The yaw is in radians.");
+    "This <Yaw> refers to the global <Yaw> of the zone.\n The yaw is in radians.");
   yaw_hbox->addWidget(_yaw_line_edit);
 
   QHBoxLayout* width_hbox = new QHBoxLayout;
@@ -180,52 +179,8 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
       update_zone_view();
       emit redraw();
     });
-  _depth_line_edit->setToolTip("Width of the zone.");
+  _depth_line_edit->setToolTip("Depth of the zone.");
   depth_hbox->addWidget(_depth_line_edit);
-
-
-  QHBoxLayout* entry_hbox = new QHBoxLayout;
-  entry_hbox->addWidget(new QLabel("Entry point:"));
-  _entry_combo_box = new QComboBox;
-  update_entry_combobox();
-  _entry_combo_box->setCurrentText(
-    QString::fromStdString(_zone.entry_point));
-  connect(
-    _entry_combo_box,
-    &QComboBox::currentTextChanged,
-    [this](const QString& text)
-    {
-      _zone.entry_point = text.toStdString();
-    });
-  entry_hbox->addWidget(_entry_combo_box);
-
-  QHBoxLayout* external_entry_hbox = new QHBoxLayout;
-  external_entry_hbox->addWidget(new QLabel("External entry point:"));
-  _external_entry_combo_box = new QComboBox;
-  for (const QString& vertex_name : _vertex_names)
-  {
-    _external_entry_combo_box->addItem(vertex_name);
-  }
-  _external_entry_combo_box->setCurrentText(
-    QString::fromStdString(_zone.external_entry_point));
-  connect(
-    _external_entry_combo_box,
-    &QComboBox::currentTextChanged,
-    [this](const QString& text)
-    {
-      _zone.external_entry_point = text.toStdString();
-      for (std::size_t i = 0; i < _vertex_names.size(); i++)
-      {
-        if (_vertex_names[i].toStdString() == _zone.external_entry_point)
-        {
-          _zone.external_entry_point_x = _vertex_x[i];
-          _zone.external_entry_point_y = _vertex_y[i];
-        }
-      }
-
-    });
-  _external_entry_combo_box->setToolTip("Level which the zone is in.");
-  external_entry_hbox->addWidget(_external_entry_combo_box);
 
   QHBoxLayout* show_vertices_hbox = new QHBoxLayout;
   show_vertices_hbox->addWidget(new QLabel("Show vertices:"));
@@ -242,12 +197,6 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
     });
   show_vertices_hbox->addWidget(_vertexcheckbox);
 
-  _level_table = new QTableWidget;
-  _level_table->setMinimumSize(200, 200);
-  _level_table->verticalHeader()->setVisible(false);
-  _level_table->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
-  _level_table->setHorizontalHeaderItem(0, new QTableWidgetItem("Level name"));
-
   _vertex_table = new QTableWidget;
   _vertex_table->setMinimumSize(400, 200);
   _vertex_table->verticalHeader()->setVisible(false);
@@ -255,32 +204,32 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
   _vertex_table->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 
   _vertex_table->setHorizontalHeaderItem(0,
-    new QTableWidgetItem("Vertex name"));
+    new QTableWidgetItem("Add Internal Vertex..."));
   _vertex_table->horizontalHeader()->setSectionResizeMode(
-    0, QHeaderView::Stretch);
+    0, QHeaderView::ResizeToContents);
 
   _vertex_table->setHorizontalHeaderItem(1,
-    new QTableWidgetItem("X (m)"));
+    new QTableWidgetItem("Vertex name"));
   _vertex_table->horizontalHeader()->setSectionResizeMode(
-    1, QHeaderView::ResizeToContents);
+    1, QHeaderView::Stretch);
 
   _vertex_table->setHorizontalHeaderItem(2,
-    new QTableWidgetItem("Y (m)"));
+    new QTableWidgetItem("X (m)"));
   _vertex_table->horizontalHeader()->setSectionResizeMode(
     2, QHeaderView::ResizeToContents);
 
   _vertex_table->setHorizontalHeaderItem(3,
-    new QTableWidgetItem("Group"));
+    new QTableWidgetItem("Y (m)"));
   _vertex_table->horizontalHeader()->setSectionResizeMode(
     3, QHeaderView::ResizeToContents);
 
   _vertex_table->setHorizontalHeaderItem(4,
-    new QTableWidgetItem("Priority"));
+    new QTableWidgetItem("Group"));
   _vertex_table->horizontalHeader()->setSectionResizeMode(
     4, QHeaderView::ResizeToContents);
 
   _vertex_table->setHorizontalHeaderItem(5,
-    new QTableWidgetItem("Add Vertex..."));
+    new QTableWidgetItem("Priority"));
   _vertex_table->horizontalHeader()->setSectionResizeMode(
     5, QHeaderView::ResizeToContents);
 
@@ -290,27 +239,27 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
   _transition_lane_table->setColumnCount(5);
 
   _transition_lane_table->setHorizontalHeaderItem(0,
-    new QTableWidgetItem("Internal vertex"));
+    new QTableWidgetItem("Add lane..."));
   _transition_lane_table->horizontalHeader()->setSectionResizeMode(
-    0, QHeaderView::Stretch);
+    0, QHeaderView::ResizeToContents);
 
   _transition_lane_table->setHorizontalHeaderItem(1,
-    new QTableWidgetItem("External vertex"));
+    new QTableWidgetItem("Internal vertex"));
   _transition_lane_table->horizontalHeader()->setSectionResizeMode(
-    1, QHeaderView::ResizeToContents);
+    1, QHeaderView::Stretch);
 
   _transition_lane_table->setHorizontalHeaderItem(2,
-    new QTableWidgetItem("is exit lane"));
+    new QTableWidgetItem("External vertex"));
   _transition_lane_table->horizontalHeader()->setSectionResizeMode(
     2, QHeaderView::ResizeToContents);
 
   _transition_lane_table->setHorizontalHeaderItem(3,
-    new QTableWidgetItem("is entry lane"));
+    new QTableWidgetItem("is exit lane"));
   _transition_lane_table->horizontalHeader()->setSectionResizeMode(
     3, QHeaderView::ResizeToContents);
 
   _transition_lane_table->setHorizontalHeaderItem(4,
-    new QTableWidgetItem("Add lane..."));
+    new QTableWidgetItem("is entry lane"));
   _transition_lane_table->horizontalHeader()->setSectionResizeMode(
     4, QHeaderView::ResizeToContents);
 
@@ -323,18 +272,15 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
   left_vbox->addLayout(y_hbox);
   left_vbox->addLayout(yaw_hbox);
   left_vbox->addWidget(_transition_lane_table);
-  left_vbox->addLayout(show_vertices_hbox);
-
+  
   QVBoxLayout* right_vbox = new QVBoxLayout;
-
   _zone_scene = new QGraphicsScene;
-
   _zone_view = new QGraphicsView;
   _zone_view->setScene(_zone_scene);
   _zone_view->setMinimumSize(400, 400);
   right_vbox->addWidget(_zone_view, 1);
-
   right_vbox->addWidget(_vertex_table);
+  right_vbox->addLayout(show_vertices_hbox);
 
   QHBoxLayout* top_hbox = new QHBoxLayout;
   top_hbox->addLayout(left_vbox);
@@ -349,7 +295,6 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
 
   update_vertex_table();
   update_transition_lane_table();
-  update_level_table();
 
   connect(
     _vertex_table, &QTableWidget::cellChanged,
@@ -402,28 +347,6 @@ void ZoneDialog::ok_button_clicked()
     return;
   }
 
-  _zone.name = _name_line_edit->text().toStdString();
-  _zone.level = _level_combo_box->currentText().toStdString();
-  _zone.entry_point = _entry_combo_box->currentText().toStdString();
-  _zone.external_entry_point =
-    _external_entry_combo_box->currentText().toStdString();
-
-  for (std::size_t i = 0; i < _level_names.size(); i++)
-  {
-    if (_level_names[i].toStdString() == _zone.level)
-    {
-      _zone.zone_elevation = _level_elevations[i];
-      break;
-    }
-  }
-
-  _zone.x = _x_line_edit->text().toDouble();
-  _zone.y = _y_line_edit->text().toDouble();
-  _zone.yaw = _yaw_line_edit->text().toDouble();
-
-  _zone.width = _width_line_edit->text().toDouble();
-  _zone.depth = _depth_line_edit->text().toDouble();
-
   if (!is_zone_name_unique(_name_line_edit->text().toStdString()))
   {
     QMessageBox::critical(this, "Error", "Zone name must be unique");
@@ -447,18 +370,27 @@ void ZoneDialog::cancel_button_clicked()
 // ======================================================================================================================
 void ZoneDialog::update_vertex_table()
 {
+  _vertex_table->blockSignals(true);
   _vertex_table->setRowCount(1 + _zone.vertices.size());
   for (std::size_t i = 0; i < _zone.vertices.size(); i++)
   {
     const ZoneVertex& vertex = _zone.vertices[i];  // save some typing
-    set_vertex_cell(i, 0, QString::fromStdString(vertex.name));
+
+    // clear any lingering placeholder items (e.g. when a row was previously the Add row)
+    _vertex_table->setItem(i, 0, new QTableWidgetItem());
+    _vertex_table->setItem(i, 5, new QTableWidgetItem());
+
+    QPushButton* delete_button = new QPushButton("Delete...", this);
+    _vertex_table->setCellWidget(i, 0, delete_button);
+
+    set_vertex_cell(i, 1, QString::fromStdString(vertex.name));
 
     // set the numeric fields
-    set_vertex_cell(i, 1, QString::number(vertex.x));
-    set_vertex_cell(i, 2, QString::number(vertex.y));
+    set_vertex_cell(i, 2, QString::number(vertex.x));
+    set_vertex_cell(i, 3, QString::number(vertex.y));
 
     // set the group name
-    set_vertex_cell(i, 3, QString::fromStdString(vertex.group));
+    set_vertex_cell(i, 4, QString::fromStdString(vertex.group));
 
     _priority_box = new QComboBox;
     for (std::size_t j = 0; j < _zone.vertices.size(); j++)
@@ -476,10 +408,7 @@ void ZoneDialog::update_vertex_table()
         update_zone_view();
         emit redraw();
       });
-    _vertex_table->setCellWidget(i, 4, _priority_box);
-
-    QPushButton* delete_button = new QPushButton("Delete...", this);
-    _vertex_table->setCellWidget(i, 5, delete_button);
+    _vertex_table->setCellWidget(i, 5, _priority_box);
 
     connect(
       delete_button,
@@ -487,25 +416,24 @@ void ZoneDialog::update_vertex_table()
       [this, i]()
       {
         _zone.vertices.erase(_zone.vertices.begin() + i);
-        set_vertex_cell(_zone.vertices.size(), 0, nullptr);
-        set_vertex_cell(_zone.vertices.size(), 1, nullptr);
-        set_vertex_cell(_zone.vertices.size(), 2, nullptr);
-        set_vertex_cell(_zone.vertices.size(), 3, nullptr);
-        update_entry_combobox();
         update_vertex_table();
+        update_transition_lane_table();
         update_zone_view();
       });
   }
 
   // we'll use the last row for the "Add" button
   const int last_row_idx = static_cast<int>(_zone.vertices.size());
-  _vertex_table->setCellWidget(last_row_idx, 0, nullptr);
-  _vertex_table->setCellWidget(last_row_idx, 1, nullptr);
-  _vertex_table->setCellWidget(last_row_idx, 2, nullptr);
-  _vertex_table->setCellWidget(last_row_idx, 3, nullptr);
-  _vertex_table->setCellWidget(last_row_idx, 4, nullptr);
   QPushButton* add_button = new QPushButton("Add...", this);
-  _vertex_table->setCellWidget(last_row_idx, 5, add_button);
+  _vertex_table->setCellWidget(last_row_idx, 0, add_button);
+  for (int col = 1; col <= 5; col++)
+  {
+    _vertex_table->setCellWidget(last_row_idx, col, nullptr);
+    auto* placeholder = new QTableWidgetItem();
+    placeholder->setFlags(Qt::NoItemFlags);
+    placeholder->setBackground(QColor(180, 180, 180));
+    _vertex_table->setItem(last_row_idx, col, placeholder);
+  }
   connect(
     add_button,
     &QAbstractButton::clicked,
@@ -522,23 +450,29 @@ void ZoneDialog::update_vertex_table()
       vertex.name = "name";
       vertex.priority = _zone.vertices.size()+1;
       _zone.vertices.push_back(vertex);
-      update_entry_combobox();
       update_vertex_table();
+      update_transition_lane_table();
       update_zone_view();
     });
+  _vertex_table->blockSignals(false);
 }
 
 // ======================================================================================================================
 void ZoneDialog::update_transition_lane_table()
 {
+  _transition_lane_table->blockSignals(true);
   _transition_lane_table->setRowCount(1 + _zone.transition_lanes.size());
 
   for (std::size_t i = 0; i < _zone.transition_lanes.size(); i++)
   {
     const ZoneTransitionLane& lane = _zone.transition_lanes[i];  // save some typing
 
-    // set_transition_lane_cell(i, 0, QString::fromStdString(lane.internal_vertex));
-    // set_transition_lane_cell(i, 1, QString::fromStdString(lane.external_vertex));
+    // clear any lingering placeholder items (e.g. when a row was previously the Add row)
+    for (int col = 0; col <= 4; col++)
+      _transition_lane_table->setItem(i, col, new QTableWidgetItem());
+
+    QPushButton* delete_button = new QPushButton("Delete...", this);
+    _transition_lane_table->setCellWidget(i, 0, delete_button);
 
     _internal_vertex_combo_box = new QComboBox;
     update_internal_vertex_combobox();
@@ -551,11 +485,9 @@ void ZoneDialog::update_transition_lane_table()
       {
         _zone.transition_lanes[i].internal_vertex = text.toStdString();
       });
-    _transition_lane_table->setCellWidget(i, 0, _internal_vertex_combo_box);
-
+    _transition_lane_table->setCellWidget(i, 1, _internal_vertex_combo_box);
 
     _external_vertex_combo_box = new QComboBox;
-    // update_external_vertex_combobox();
     _external_vertex_combo_box->addItem("Select vertex");
     for (const QString& vertex_name : _vertex_names)
     {
@@ -570,7 +502,7 @@ void ZoneDialog::update_transition_lane_table()
       {
         _zone.transition_lanes[i].external_vertex = text.toStdString();
       });
-    _transition_lane_table->setCellWidget(i, 1, _external_vertex_combo_box);
+    _transition_lane_table->setCellWidget(i, 2, _external_vertex_combo_box);
 
     _exit_lanecheckbox = new QCheckBox;
     _exit_lanecheckbox->setChecked(lane.is_exit_lane);
@@ -581,8 +513,7 @@ void ZoneDialog::update_transition_lane_table()
       {
         _zone.transition_lanes[i].is_exit_lane = box_checked;
       });
-    _transition_lane_table->setCellWidget(i, 2, _exit_lanecheckbox);
-
+    _transition_lane_table->setCellWidget(i, 3, _exit_lanecheckbox);
 
     _entry_lanecheckbox = new QCheckBox;
     _entry_lanecheckbox->setChecked(lane.is_entry_lane);
@@ -593,17 +524,15 @@ void ZoneDialog::update_transition_lane_table()
       {
         _zone.transition_lanes[i].is_entry_lane = box_checked;
       });
-    _transition_lane_table->setCellWidget(i, 3, _entry_lanecheckbox);
-
-    QPushButton* delete_button = new QPushButton("Delete...", this);
-    _transition_lane_table->setCellWidget(i, 4, delete_button);
+    _transition_lane_table->setCellWidget(i, 4, _entry_lanecheckbox);
 
     connect(
       delete_button,
       &QAbstractButton::clicked,
       [this, i]()
       {
-        if (_zone.transition_lanes.size() <= 2)
+        if (_zone.transition_lanes.size() <= 2 &&
+          transition_lane_vertices_valid(_zone.transition_lanes[i]))
         {
           QMessageBox::warning(
             this,
@@ -613,11 +542,11 @@ void ZoneDialog::update_transition_lane_table()
           return;
         }
         _zone.transition_lanes.erase(_zone.transition_lanes.begin() + i);
-        set_transition_lane_cell(_zone.transition_lanes.size(), 0, nullptr);
         set_transition_lane_cell(_zone.transition_lanes.size(), 1, nullptr);
-        _transition_lane_table->setCellWidget(_zone.transition_lanes.size(), 2,
-        nullptr);
+        set_transition_lane_cell(_zone.transition_lanes.size(), 2, nullptr);
         _transition_lane_table->setCellWidget(_zone.transition_lanes.size(), 3,
+        nullptr);
+        _transition_lane_table->setCellWidget(_zone.transition_lanes.size(), 4,
         nullptr);
         update_transition_lane_table();
         update_zone_view();
@@ -626,32 +555,37 @@ void ZoneDialog::update_transition_lane_table()
 
   // we'll use the last row for the "Add" button
   const int last_row_idx = static_cast<int>(_zone.transition_lanes.size());
-  _transition_lane_table->setCellWidget(last_row_idx, 0, nullptr);
-  _transition_lane_table->setCellWidget(last_row_idx, 1, nullptr);
-  _transition_lane_table->setCellWidget(last_row_idx, 2, nullptr);
-  _transition_lane_table->setCellWidget(last_row_idx, 3, nullptr);
   QPushButton* add_button = new QPushButton("Add...", this);
-  _transition_lane_table->setCellWidget(last_row_idx, 4, add_button);
+  _transition_lane_table->setCellWidget(last_row_idx, 0, add_button);
+  for (int col = 1; col <= 4; col++)
+  {
+    _transition_lane_table->setCellWidget(last_row_idx, col, nullptr);
+    auto* placeholder = new QTableWidgetItem();
+    placeholder->setFlags(Qt::NoItemFlags);
+    placeholder->setBackground(QColor(180, 180, 180));
+    _transition_lane_table->setItem(last_row_idx, col, placeholder);
+  }
   connect(
     add_button,
     &QAbstractButton::clicked,
     [this]()
     {
+      if (_zone.vertices.size() < 1)
+      {
+        QMessageBox::warning(
+          this,
+          "Cannot add lane",
+          "At least one internal vertex is required ");
+        return;
+      }
       ZoneTransitionLane new_transition_lane;
       _zone.transition_lanes.push_back(new_transition_lane);
       update_transition_lane_table();
       update_zone_view();
     });
+  _transition_lane_table->blockSignals(false);
 }
-// ======================================================================================================================
-void ZoneDialog::update_entry_combobox()
-{
-  _entry_combo_box->clear();
-  for (const auto& vertex : _zone.vertices)
-  {
-    _entry_combo_box->addItem(QString::fromStdString(vertex.name));
-  }
-}
+
 // ======================================================================================================================
 void ZoneDialog::update_internal_vertex_combobox()
 {
@@ -708,48 +642,44 @@ const
 
 bool ZoneDialog::has_valid_entry_and_exit_transition_lanes() const
 {
-  // Check that each internal vertex has at least one entry lane and one exit lane
   for (const auto& vertex : _zone.vertices)
   {
-    int entry_count = 0;
-    int exit_count = 0;
+    bool has_valid_pair = false;
 
-    for (const auto& lane : _zone.transition_lanes)
+    for (const auto& entry_lane : _zone.transition_lanes)
     {
-      if (!transition_lane_vertices_valid(lane))
+      if (!transition_lane_vertices_valid(entry_lane))
+        continue;
+      if (!entry_lane.is_entry_lane)
+        continue;
+      if (entry_lane.internal_vertex != vertex.name)
         continue;
 
-      if (lane.internal_vertex == vertex.name)
+      for (const auto& exit_lane : _zone.transition_lanes)
       {
-        if (lane.is_entry_lane)
-          entry_count++;
-        if (lane.is_exit_lane)
-          exit_count++;
+        if (!transition_lane_vertices_valid(exit_lane))
+          continue;
+        if (!exit_lane.is_exit_lane)
+          continue;
+        if (exit_lane.internal_vertex != vertex.name)
+          continue;
+
+        if (entry_lane.external_vertex != exit_lane.external_vertex)
+        {
+          has_valid_pair = true;
+          break;
+        }
       }
+
+      if (has_valid_pair)
+        break;
     }
 
-    if (entry_count < 1 || exit_count < 1)
+    if (!has_valid_pair)
       return false;
   }
 
-  // Also check that there's at least one entry lane and one exit lane (can be the same lane)
-  // with different external vertices
-  for (const auto& entry_lane : _zone.transition_lanes)
-  {
-    if (!entry_lane.is_entry_lane)
-      continue;
-
-    for (const auto& exit_lane : _zone.transition_lanes)
-    {
-      if (!exit_lane.is_exit_lane)
-        continue;
-
-      if (entry_lane.external_vertex != exit_lane.external_vertex)
-        return true;
-    }
-  }
-
-  return false;
+  return true;
 }
 
 // ======================================================================================================================
@@ -765,20 +695,6 @@ void ZoneDialog::set_transition_lane_cell(const int row, const int col,
   _transition_lane_table->setItem(row, col, new QTableWidgetItem(text));
 }
 
-// ======================================================================================================================
-void ZoneDialog::update_level_table()
-{
-  _level_table->setColumnCount(1 + static_cast<int>(_zone.vertices.size()));
-  _level_table->setHorizontalHeaderItem(0, new QTableWidgetItem("Level"));
-  for (std::size_t vertex_idx = 0; vertex_idx < _zone.vertices.size();
-    vertex_idx++)
-  {
-    _level_table->setHorizontalHeaderItem(
-      vertex_idx + 1,
-      new QTableWidgetItem(
-        QString::fromStdString(_zone.vertices[vertex_idx].name)));
-  }
-}
 // ======================================================================================================================
 bool ZoneDialog::is_vertex_name_unique(const std::string& name,
   int ignore_index) const
@@ -806,7 +722,7 @@ void ZoneDialog::vertex_table_cell_changed(int row, int col)
 
   // If a vertex name was changed, we need to update the options shown in all
   // the level_table combo boxes
-  if (col == 0)  // name
+  if (col == 1)  // name
   {
     std::string new_name =
       _vertex_table->item(row, col)->text().toStdString();
@@ -829,18 +745,15 @@ void ZoneDialog::vertex_table_cell_changed(int row, int col)
     }
 
     _zone.vertices[row].name = new_name;
-
-    update_entry_combobox();
-    update_level_table();
   }
-  else if (col == 1) // x
+  else if (col == 2) // x
     _zone.vertices[row].x = _vertex_table->item(row, col)->text().toDouble();
-  else if (col == 2) // y
+  else if (col == 3) // y
     _zone.vertices[row].y = _vertex_table->item(row, col)->text().toDouble();
-  else if (col == 3)
+  else if (col == 4) // group
     _zone.vertices[row].group =
       _vertex_table->item(row, col)->text().toStdString();
-  else if (col == 4)
+  else if (col == 5) // priority
     _zone.vertices[row].priority =
       _vertex_table->item(row, col)->text().toInt();
 
@@ -860,21 +773,20 @@ void ZoneDialog::transition_lane_table_cell_changed(int row, int col)
 
   // If a vertex name was changed, we need to update the options shown in all
   // the level_table combo boxes
-  if (col == 0) // name
+  if (col == 1) // internal vertex
     _zone.transition_lanes[row].internal_vertex = _transition_lane_table->item(
       row, col)->text().toStdString();
-  else if (col == 1) // x
+  else if (col == 2) // external vertex
     _zone.transition_lanes[row].external_vertex = _transition_lane_table->item(
       row, col)->text().toStdString();
-  else if (col == 2) // y
+  else if (col == 3) // is exit lane
     _zone.transition_lanes[row].is_exit_lane = _transition_lane_table->item(
       row, col)->text().toInt();
-  else if (col == 3)
+  else if (col == 4) // is entry lane
     _zone.transition_lanes[row].is_entry_lane = _transition_lane_table->item(
       row, col)->text().toInt();
 
   update_internal_vertex_combobox();
-  update_level_table();
   update_zone_view();
   emit redraw();
 }

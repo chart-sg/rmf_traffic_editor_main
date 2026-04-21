@@ -53,10 +53,8 @@ private:
   std::vector<double> _level_elevations;
 
   QLineEdit* _name_line_edit;
-  QComboBox* _entry_combo_box;
   QComboBox* _internal_vertex_combo_box;
   QComboBox* _external_vertex_combo_box;
-  QComboBox* _external_entry_combo_box;
   QComboBox* _level_combo_box;
   QLineEdit* _x_line_edit;
   QLineEdit* _y_line_edit;
@@ -70,7 +68,6 @@ private:
 
   QTableWidget* _vertex_table;
   QTableWidget* _transition_lane_table;
-  QTableWidget* _level_table;
 
   QGraphicsView* _zone_view;
   QGraphicsScene* _zone_scene;
@@ -86,10 +83,8 @@ private:
     const QString& text);
   void transition_lane_table_cell_changed(int row, int col);
 
-  void update_level_table();
   void update_zone_view();
 
-  void update_entry_combobox();
   void update_internal_vertex_combobox();
 
   /// True if internal_vertex names a zone vertex and external_vertex a level vertex (not placeholders).
