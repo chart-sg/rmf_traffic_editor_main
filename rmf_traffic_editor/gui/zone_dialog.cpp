@@ -337,20 +337,24 @@ void ZoneDialog::ok_button_clicked()
     return;
   }
 
-  if (!has_valid_entry_and_exit_transition_lanes())
-  {
-    QMessageBox::critical(
-      this,
-      "Error",
-      "Each internal vertex must have at least one entry lane and "
-      "one exit lane.\n\nThey cannot share the same external vertex.");
-    return;
-  }
-
   if (!is_zone_name_unique(_name_line_edit->text().toStdString()))
   {
     QMessageBox::critical(this, "Error", "Zone name must be unique");
     return;
+  }
+  
+  if (!has_valid_entry_and_exit_transition_lanes())
+  {
+    QMessageBox mb(this);
+    mb.setIcon(QMessageBox::Warning);
+    mb.setWindowTitle("Warning");
+    mb.setText(
+      "Current lanes configuration might cause issues when robots "
+      "enter/exit the zone");
+    mb.addButton("Cancel", QMessageBox::RejectRole);
+    mb.addButton("OK", QMessageBox::AcceptRole);
+    if (mb.exec() != QDialog::Accepted)
+      return;
   }
 
   update_zone_view();
