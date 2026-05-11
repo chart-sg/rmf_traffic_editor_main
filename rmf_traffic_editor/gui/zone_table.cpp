@@ -122,4 +122,6 @@ void ZoneTable::update(Building& building)
     });
 
   blockSignals(false);
+  resizeColumnToContents(2);
+  resizeColumnToContents(3);
 }
