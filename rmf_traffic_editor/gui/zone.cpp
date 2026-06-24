@@ -189,7 +189,7 @@ void Zone::draw(
       double radius = 0.1 / meters_per_pixel;
       vertex_pen.setWidthF(radius / 2.0);
 
-      QColor nonselected_color(QColor::fromRgbF(0.0, 0.5, 0.0));
+      QColor nonselected_color(QColor::fromRgbF(0.0, 0.0, 0.0));
       nonselected_color.setAlphaF(0.5);
 
       const QBrush vertex_brush = QBrush(nonselected_color);
