@@ -535,16 +535,6 @@ void ZoneDialog::update_transition_lane_table()
       &QAbstractButton::clicked,
       [this, i]()
       {
-        if (_zone.transition_lanes.size() <= 2 &&
-          transition_lane_vertices_valid(_zone.transition_lanes[i]))
-        {
-          QMessageBox::warning(
-            this,
-            "Cannot delete",
-            "At least two transition lanes are required "
-            "(internal ↔ external vertex each).");
-          return;
-        }
         _zone.transition_lanes.erase(_zone.transition_lanes.begin() + i);
         set_transition_lane_cell(_zone.transition_lanes.size(), 1, nullptr);
         set_transition_lane_cell(_zone.transition_lanes.size(), 2, nullptr);
