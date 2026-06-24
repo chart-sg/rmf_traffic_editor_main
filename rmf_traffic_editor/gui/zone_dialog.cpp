@@ -307,6 +307,7 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
   update_zone_view();
   adjustSize();
   _ok_button->setFocus(Qt::OtherFocusReason);
+  _ok_button->setDefault(true);
 }
 
 // ======================================================================================================================
