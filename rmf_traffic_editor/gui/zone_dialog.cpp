@@ -531,12 +531,6 @@ void ZoneDialog::update_transition_lane_table()
       [this, i]()
       {
         _zone.transition_lanes.erase(_zone.transition_lanes.begin() + i);
-        set_transition_lane_cell(_zone.transition_lanes.size(), 1, nullptr);
-        set_transition_lane_cell(_zone.transition_lanes.size(), 2, nullptr);
-        _transition_lane_table->setCellWidget(_zone.transition_lanes.size(), 3,
-        nullptr);
-        _transition_lane_table->setCellWidget(_zone.transition_lanes.size(), 4,
-        nullptr);
         update_transition_lane_table();
         update_zone_view();
       });
@@ -707,12 +701,6 @@ void ZoneDialog::set_vertex_cell(const int row, const int col,
   const QString& text)
 {
   _vertex_table->setItem(row, col, new QTableWidgetItem(text));
-}
-// ======================================================================================================================
-void ZoneDialog::set_transition_lane_cell(const int row, const int col,
-  const QString& text)
-{
-  _transition_lane_table->setItem(row, col, new QTableWidgetItem(text));
 }
 
 // ======================================================================================================================

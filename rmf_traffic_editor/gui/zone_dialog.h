@@ -79,8 +79,6 @@ private:
   void vertex_table_cell_changed(int row, int col);
 
   void update_transition_lane_table();
-  void set_transition_lane_cell(const int row, const int col,
-    const QString& text);
   void transition_lane_table_cell_changed(int row, int col);
 
   void update_zone_view();
