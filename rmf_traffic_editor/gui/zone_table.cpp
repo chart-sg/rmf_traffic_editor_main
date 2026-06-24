@@ -112,6 +112,7 @@ void ZoneTable::update(Building& building)
     {
       Zone zone;
       zone.level = building.levels[0].name;
+      zone.zone_elevation = building.levels[0].elevation;
       ZoneDialog zone_dialog(zone, building);
       if (zone_dialog.exec() == QDialog::Accepted)
       {
