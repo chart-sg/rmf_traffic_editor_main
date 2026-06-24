@@ -346,15 +346,9 @@ void ZoneDialog::ok_button_clicked()
   
   if (!has_valid_entry_and_exit_transition_lanes())
   {
-    QMessageBox mb(this);
-    mb.setIcon(QMessageBox::Warning);
-    mb.setWindowTitle("Warning");
-    mb.setText(
+    if (!confirm_warning(
       "Current lanes configuration might cause issues when robots "
-      "enter/exit the zone");
-    mb.addButton("Cancel", QMessageBox::RejectRole);
-    mb.addButton("OK", QMessageBox::AcceptRole);
-    if (mb.exec() != QDialog::Accepted)
+      "enter/exit the zone"))
       return;
   }
 
@@ -675,6 +669,37 @@ bool ZoneDialog::has_valid_entry_and_exit_transition_lanes() const
   }
 
   return true;
+}
+
+// ======================================================================================================================
+bool ZoneDialog::confirm_warning(const QString& text)
+{
+  QDialog dialog(this);
+  dialog.setWindowTitle("Warning");
+
+  QHBoxLayout* msg_hbox = new QHBoxLayout;
+  QLabel* icon_label = new QLabel;
+  icon_label->setPixmap(
+    dialog.style()->standardIcon(QStyle::SP_MessageBoxWarning).pixmap(48, 48));
+  msg_hbox->addWidget(icon_label);
+  msg_hbox->addWidget(new QLabel(text), 1);
+
+  QPushButton* ok_button = new QPushButton("OK");
+  QPushButton* cancel_button = new QPushButton("Cancel");
+  QHBoxLayout* button_hbox = new QHBoxLayout;
+  button_hbox->addStretch(1);
+  button_hbox->addWidget(ok_button);
+  button_hbox->addWidget(cancel_button);
+
+  QVBoxLayout* vbox = new QVBoxLayout;
+  vbox->addLayout(msg_hbox);
+  vbox->addLayout(button_hbox);
+  dialog.setLayout(vbox);
+
+  connect(ok_button, &QAbstractButton::clicked, &dialog, &QDialog::accept);
+  connect(cancel_button, &QAbstractButton::clicked, &dialog, &QDialog::reject);
+
+  return dialog.exec() == QDialog::Accepted;
 }
 
 // ======================================================================================================================
