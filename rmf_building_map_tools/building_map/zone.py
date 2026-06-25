@@ -25,6 +25,17 @@ class Zone:
         if 'transition_lanes' in yaml_node:
             self.transition_lanes = self.parse_transition_lanes(yaml_node)
 
+    def contains_point(self, x, y):
+        # Test whether a point in global coordinates lies inside the zone
+        # rectangle.
+        dx = x - self.x
+        dy = y - self.y
+        s = np.sin(self.yaw)
+        c = np.cos(self.yaw)
+        local_x = s * dx - c * dy
+        local_y = -c * dx - s * dy
+        return abs(local_x) <= self.width / 2 and abs(local_y) <= self.depth / 2
+
     def parse_transition_lanes(self, yaml_node):
         transition_lanes = []
         for transition_lane in yaml_node['transition_lanes']:

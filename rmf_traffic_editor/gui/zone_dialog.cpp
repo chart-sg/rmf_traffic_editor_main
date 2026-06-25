@@ -17,6 +17,7 @@
 
 #include "zone_dialog.h"
 #include <cfloat>
+#include <cmath>
 #include <QtWidgets>
 using std::vector;
 
@@ -352,6 +353,19 @@ void ZoneDialog::ok_button_clicked()
       return;
   }
 
+  const std::vector<std::string> outside = vertices_outside_zone();
+  if (!outside.empty())
+  {
+    QStringList names;
+    for (const auto& name : outside)
+      names.append(QString::fromStdString(name));
+
+    if (!confirm_warning(
+      "These internal vertices lie outside the zone bounds:\n  " +
+      names.join("\n  ")))
+      return;
+  }
+
   update_zone_view();
   emit redraw();
   accept();
@@ -663,6 +677,20 @@ bool ZoneDialog::has_valid_entry_and_exit_transition_lanes() const
   }
 
   return true;
+}
+
+// ======================================================================================================================
+std::vector<std::string> ZoneDialog::vertices_outside_zone() const
+{
+  std::vector<std::string> outside;
+  const double half_w = _zone.width / 2.0;
+  const double half_d = _zone.depth / 2.0;
+  for (const auto& vertex : _zone.vertices)
+  {
+    if (std::abs(vertex.x) > half_w || std::abs(vertex.y) > half_d)
+      outside.push_back(vertex.name);
+  }
+  return outside;
 }
 
 // ======================================================================================================================

@@ -401,7 +401,7 @@ class Building:
                 g['levels'][level_name] = level_graph
                 if level_graph['lanes']:
                     empty = False
-                    self.generate_zone_vertices_and_lanes(level_name,level_graph)
+                    self.generate_zone_vertices_and_lanes(level_name, level_graph, i)
 
                 for door_edge in level.doors:
                     door_edge.calc_statistics(level.transformed_vertices)
@@ -451,7 +451,7 @@ class Building:
                 nav_graphs[f'{i}'] = g
         return nav_graphs
 
-    def generate_zone_vertices_and_lanes(self, level_name, level_yaml):
+    def generate_zone_vertices_and_lanes(self, level_name, level_yaml, graph_idx):
         vertex_names = {v[2]['name'] for v in level_yaml['vertices'] if v[2] != ""}
 
         for zone_name, zone in self.zones.items():
@@ -463,8 +463,23 @@ class Building:
             if not external_points & vertex_names:
                 continue
 
+            # Warn about non-zone vertices that fall inside this zone.
+            for idx, vertex in enumerate(list(level_yaml['vertices'])):
+                if zone.contains_point(vertex[0], vertex[1]):
+                    name = vertex[2].get('name', '')
+                    label = name if name else '(unnamed)'
+                    print(
+                        f'WARNING: regular vertex [{label}] at index [{idx}] in '
+                        f'nav graph [{graph_idx}] lies inside zone [{zone.name}]')
+
             # Append zone internal vertices to levels
             for v in zone.vertices.values():
+                # Warn if an internal vertex was placed outside the zone bounds.
+                if not zone.contains_point(v['location'][0], v['location'][1]):
+                    print(
+                        f'WARNING: zone [{zone.name}] internal vertex '
+                        f'[{v["name"]}] lies outside the zone bounds')
+
                 v_property = {
                     'name': v['name'],
                     'priority': v['priority'],

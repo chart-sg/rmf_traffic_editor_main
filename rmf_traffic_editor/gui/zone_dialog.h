@@ -92,6 +92,9 @@ private:
   /// True if zone name is unique
   bool is_zone_name_unique(const std::string& name) const;
 
+  /// Internal vertices that are outside the zone.
+  std::vector<std::string> vertices_outside_zone() const;
+
   bool confirm_warning(const QString& text);
 
   bool is_vertex_name_unique(const std::string& name, int ignore_index) const;
