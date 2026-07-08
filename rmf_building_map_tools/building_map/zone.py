@@ -9,7 +9,7 @@ class Zone:
         self.level = str(yaml_node['level'])
         self.depth = float(yaml_node['depth'])
         self.width = float(yaml_node['width'])
-        self.yaw = float(yaml_node['yaw']) + np.pi / 2
+        self.yaw = float(yaml_node['yaw'])
 
         # Calculating the center of the zone
         self.raw_pos = (
@@ -32,8 +32,8 @@ class Zone:
         dy = y - self.y
         s = np.sin(self.yaw)
         c = np.cos(self.yaw)
-        local_x = s * dx - c * dy
-        local_y = -c * dx - s * dy
+        local_x = c * dx + s * dy
+        local_y = -s * dx + c * dy
         return abs(local_x) <= self.width / 2 and abs(local_y) <= self.depth / 2
 
     def parse_transition_lanes(self, yaml_node):
@@ -71,15 +71,16 @@ class Zone:
     def parse_vertices(self, yaml_node):
         vertices = {}
         for vertice_name, vertex_yaml in yaml_node['vertices'].items():
-            # Calculating the location of vertices, transforming it from zone local coordinate to global coordinate
+            # Calculating the location of vertices, transforming it from zone 
+            # local coordinate to global coordinate
             x = (
-                vertex_yaml['x'] * np.sin(self.yaw)
-                - vertex_yaml['y'] * np.cos(self.yaw)
+                vertex_yaml['x'] * np.cos(self.yaw)
+                + vertex_yaml['y'] * np.sin(self.yaw)
                 + self.x
             )
             y = (
-                -vertex_yaml['y'] * np.sin(self.yaw)
-                - vertex_yaml['x'] * np.cos(self.yaw)
+                vertex_yaml['x'] * np.sin(self.yaw)
+                - vertex_yaml['y'] * np.cos(self.yaw)
                 + self.y
             )
             unique_vertex_name = self.construct_unique_vertex_name(
