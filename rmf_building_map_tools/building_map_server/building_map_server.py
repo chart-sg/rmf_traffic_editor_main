@@ -226,7 +226,7 @@ class BuildingMapServer(Node):
                 ge = GraphEdge()
                 ge.v1_idx = lane[0]
                 ge.v2_idx = lane[1]
-                if lane[2]['is_bidirectional']:
+                if lane[2].get('is_bidirectional', False):
                     ge.edge_type = GraphEdge.EDGE_TYPE_BIDIRECTIONAL
                 else:
                     ge.edge_type = GraphEdge.EDGE_TYPE_UNIDIRECTIONAL
