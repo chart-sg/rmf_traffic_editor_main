@@ -18,12 +18,15 @@ class Zone:
         )
         self.x, self.y = transform.transform_point(self.raw_pos)
         self.type = 'Default'
-        self.vertices = {}
-        if 'vertices' in yaml_node:
-            self.vertices = self.parse_vertices(yaml_node)
 
-        if 'transition_lanes' in yaml_node:
-            self.transition_lanes = self.parse_transition_lanes(yaml_node)
+        self.internal_vertices = {}
+        if 'internal_vertices' in yaml_node:
+            self.internal_vertices = self.parse_internal_vertices(yaml_node['internal_vertices'])
+
+        self.external_vertices = {}
+        if 'external_vertices' in yaml_node:
+            self.external_vertices = self.parse_external_vertices(
+                yaml_node['external_vertices'])
 
     def contains_point(self, x, y):
         # Test whether a point in global coordinates lies inside the zone
@@ -36,28 +39,12 @@ class Zone:
         local_y = -s * dx + c * dy
         return abs(local_x) <= self.width / 2 and abs(local_y) <= self.depth / 2
 
-    def parse_transition_lanes(self, yaml_node):
-        transition_lanes = []
-        for transition_lane in yaml_node['transition_lanes']:
-            internal_vertex = self.construct_unique_vertex_name(
-                transition_lane['internal_vertex'], yaml_node['vertices']
-            )
-            transition_lanes.append(
-                {
-                    'internal_vertex': internal_vertex,
-                    'external_vertex': transition_lane['external_vertex'],
-                    'is_entry_lane': transition_lane['is_entry_lane'],
-                    'is_exit_lane': transition_lane['is_exit_lane'],
-                }
-            )
-        return transition_lanes
-
-    def construct_unique_vertex_name(self, desired_vertex_name, vertices_yaml):
+    def construct_unique_vertex_name(self, vertex_name, vertices_yaml):
         # Defining the name of the vertices.
         # The formatting for now is:
-        # <zone_name>_<vertex_name>_<group>_<priority>
+        # <zone_name>#<group>#<priority>#<vertex_name>
 
-        vertex_yaml = vertices_yaml[desired_vertex_name]
+        vertex_yaml = vertices_yaml[vertex_name]
         return (
             self.name
             + '#'
@@ -65,14 +52,12 @@ class Zone:
             + '#p'
             + str(vertex_yaml['priority'])
             + '#'
-            + desired_vertex_name
+            + vertex_name
         )
 
-    def parse_vertices(self, yaml_node):
+    def parse_internal_vertices(self, yaml_node):
         vertices = {}
-        for vertice_name, vertex_yaml in yaml_node['vertices'].items():
-            # Calculating the location of vertices, transforming it from zone 
-            # local coordinate to global coordinate
+        for vertex_name, vertex_yaml in yaml_node.items():
             x = (
                 vertex_yaml['x'] * np.cos(self.yaw)
                 + vertex_yaml['y'] * np.sin(self.yaw)
@@ -84,16 +69,23 @@ class Zone:
                 + self.y
             )
             unique_vertex_name = self.construct_unique_vertex_name(
-                vertice_name, yaml_node['vertices']
+                vertex_name, yaml_node
             )
 
-            p = {}
-            p['name'] = unique_vertex_name
-
-            vertices[vertice_name] = {
+            vertices[vertex_name] = {
                 'name': unique_vertex_name,
                 'location': [float(x), float(y)],
-                'priority': str(vertex_yaml['priority']),
+                'priority': int(vertex_yaml['priority']),
                 'group': vertex_yaml['group'],
+            }
+        return vertices
+
+    def parse_external_vertices(self, yaml_node):
+        vertices = {}
+        for vertex_name, vertex_yaml in yaml_node.items():
+            vertices[vertex_name] = {
+                'name': vertex_name,
+                'is_entry_point': bool(vertex_yaml['is_entry_point']),
+                'is_exit_point': bool(vertex_yaml['is_exit_point']),
             }
         return vertices

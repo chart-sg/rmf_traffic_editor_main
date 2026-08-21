@@ -19,7 +19,6 @@
 #define ZONE_H
 
 class QGraphicsScene;
-class QGraphicsView;
 
 #include <string>
 #include <vector>
@@ -27,7 +26,7 @@ class QGraphicsView;
 #include <cfloat>
 #include "level.h"
 
-class ZoneVertex
+class InternalVertex
 {
 public:
 
@@ -35,25 +34,23 @@ public:
 
   double x = 0.0;  // x location of vertex in meters
   double y = 0.0;  // y location of vertex in meters
-  std::size_t priority = 0; // Priority of vertex
-  std::string group = "Default";  // group label of the vertex
+  uint priority = 0; // Priority of vertex
+  std::string group = "Default";  // Group label of vertex
 
   YAML::Node to_yaml() const;
   void from_yaml(const std::string& _name, const YAML::Node& data);
 };
 
-class ZoneTransitionLane
+class ExternalVertex
 {
 public:
 
-  std::string internal_vertex;
-  std::string external_vertex;
-
-  bool is_entry_lane = true;
-  bool is_exit_lane = true;
+  std::string name;
+  bool is_entry_point = false;
+  bool is_exit_point = false;
 
   YAML::Node to_yaml() const;
-  void from_yaml(const YAML::Node& data);
+  void from_yaml(const std::string& _name, const YAML::Node& data);
 };
 
 class Zone
@@ -70,36 +67,30 @@ public:
   double width = 1.0;                         // Width of the zone in meters
   double depth = 1.0;                         // Depth of the zone in meters
 
-  double zone_elevation = DBL_MAX;            // Zone elevation. Used to check which level the zone is at
+  double elevation = DBL_MAX;                 // Zone elevation. Used to check which level the zone is at
 
   bool show_vertices = true;                  // Visual marker. Used to hide or show verticse in the zone
   bool show_zone = true;                      // Visual marker. Used to hide or show the zone
+  bool show_lanes = true;                     // Visual marker. Used to hide or show the zone's transition lanes
 
-  std::vector<ZoneVertex> vertices;           // Vertices in the zone
-
-  std::vector<ZoneTransitionLane> transition_lanes;           // Transition lanes in the zone
+  std::vector<InternalVertex> internal_vertices;
+  std::vector<ExternalVertex> external_vertices;
 
   ////////////////////////////////////////////////////////////////////////
 
   Zone();
 
-  // Function that parse to YAML
   YAML::Node to_yaml() const;
 
-  // Function that parse from YAML
   void from_yaml(const std::string& _name, const YAML::Node& data,
     const std::vector<Level>& levels);
 
-  // Function to draw the zone graphically
   void draw(
     QGraphicsScene* scene,
     const double meters_per_pixel,
     const std::string& level_name,
-    const double elevation,
     const bool apply_transformation = true,
-    const double scale = 1.0,
-    const double translate_x = 0.0,
-    const double translate_y = 0.0) const;
+    const std::vector<Vertex>& level_vertices = {}) const;
 };
 
 #endif

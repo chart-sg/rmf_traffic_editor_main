@@ -7,7 +7,6 @@ import os
 import requests
 import sqlite3
 import tempfile
-import copy 
 import yaml
 
 from ament_index_python.packages import get_package_share_directory
@@ -173,6 +172,8 @@ class Building:
                 self.zones[zone_name] = \
                     Zone(zone_yaml, zone_name, transform, self.coordinate_system)
 
+        self.set_level_zones()
+
     def parse_geojson(self, json_node):
         self.levels = {}
         self.lifts = {}
@@ -321,6 +322,10 @@ class Building:
         for level_name, level in self.levels.items():
             level.set_lift_vert_lists(lift_vert_lists, self.lifts)
 
+    def set_level_zones(self):
+        for zone_name, zone in self.zones.items():
+            self.levels[zone.level].zones[zone_name] = zone
+
     def transform_all_vertices(self):
         """ Transform all vertices on all levels to a unified system """
         for level_name, level in self.levels.items():
@@ -396,12 +401,16 @@ class Building:
                 g['offset'] = [tx, ty]
 
             empty = True
+            reachable_zones = []
             for level_name, level in self.levels.items():
                 level_graph = level.generate_nav_graph(i)
                 g['levels'][level_name] = level_graph
                 if level_graph['lanes']:
                     empty = False
-                    self.generate_zone_vertices_and_lanes(level_name, level_graph, i)
+
+                for vertex in level_graph['vertices']:
+                    if 'zone' in vertex[2]:
+                        reachable_zones.append(vertex[2]['zone'])
 
                 for door_edge in level.doors:
                     door_edge.calc_statistics(level.transformed_vertices)
@@ -420,109 +429,20 @@ class Building:
                 }
 
             for zone_name, zone in self.zones.items():
+                if zone_name not in reachable_zones:
+                    continue
+
                 g['zones'][zone_name] = {
                     'dims': [zone.depth, zone.width],
                     'position': [zone.x, zone.y],
                     'orientation': zone.yaw,
                     'level': zone.level,
                     'type': zone.type,
-                    'transition_lanes': [
-                        {
-                            'internal_vertex': tl['internal_vertex'],
-                            'external_vertex': tl['external_vertex'],
-                            'is_entry_lane': tl['is_entry_lane'],
-                            'is_exit_lane': tl['is_exit_lane']
-                        }
-                        for tl in zone.transition_lanes
-                    ],
-                    'internal_vertices': [
-                        {
-                            'name': v['name'],
-                            'x': v['location'][0],
-                            'y': v['location'][1],
-                            'priority': v['priority'],
-                            'group': v['group']
-                        }
-                        for v in zone.vertices.values()
-                    ]
                 }
-                
+
             if not empty:
                 nav_graphs[f'{i}'] = g
         return nav_graphs
-
-    def generate_zone_vertices_and_lanes(self, level_name, level_yaml, graph_idx):
-        vertex_names = {v[2]['name'] for v in level_yaml['vertices'] if v[2] != ""}
-
-        for zone_name, zone in self.zones.items():
-            if zone.level != level_name:
-                continue
-
-            # Check if any external point from transition lanes is in this level's vertices
-            external_points = {tl['external_vertex'] for tl in zone.transition_lanes}
-            if not external_points & vertex_names:
-                continue
-
-            # Warn about non-zone vertices that fall inside this zone.
-            for idx, vertex in enumerate(list(level_yaml['vertices'])):
-                if zone.contains_point(vertex[0], vertex[1]):
-                    name = vertex[2].get('name', '')
-                    label = name if name else '(unnamed)'
-                    print(
-                        f'WARNING: regular vertex [{label}] at index [{idx}] in '
-                        f'nav graph [{graph_idx}] lies inside zone [{zone.name}]')
-
-            # Append zone internal vertices to levels
-            for v in zone.vertices.values():
-                # Warn if an internal vertex was placed outside the zone bounds.
-                if not zone.contains_point(v['location'][0], v['location'][1]):
-                    print(
-                        f'WARNING: zone [{zone.name}] internal vertex '
-                        f'[{v["name"]}] lies outside the zone bounds')
-
-                v_property = {
-                    'name': v['name'],
-                    'priority': v['priority'],
-                    'group': v['group']
-                }
-                level_yaml['vertices'].append([v['location'][0], v['location'][1], v_property])
-
-            # Search for transition lane connections
-            for tl in zone.transition_lanes:
-                connecting_lane = []
-
-                # Find index of external vertex
-                for i, vertex in enumerate(level_yaml['vertices']):
-                    if tl['external_vertex'] == vertex[2]['name']:
-                        connecting_lane.append(i)
-                        break
-
-                # Find index of internal vertex
-                for i, vertex in enumerate(level_yaml['vertices']):
-                    name = vertex[2].get('name', '')
-                    if zone_name in name and tl['internal_vertex'] in name:
-                        connecting_lane.append(i)
-                        break
-
-                # To not generate a transition lane if the internal or external entry point is not found
-                if len(connecting_lane) != 2:
-                    continue
-
-                if tl['is_entry_lane']:
-                    level_yaml['lanes'].append(
-                        copy.deepcopy(
-                            [connecting_lane[0],connecting_lane[1],
-                            {'speed_limit': 0,
-                             'zone': {'name': zone.name,
-                                      'transition_type': 'entry'}}]))
-
-                if tl['is_exit_lane']:
-                    level_yaml['lanes'].append(
-                        copy.deepcopy(
-                            [connecting_lane[1],connecting_lane[0],
-                            {'speed_limit': 0,
-                             'zone': {'name': zone.name,
-                                      'transition_type': 'exit'}}]))
 
     def generate_sdf_world(self, template_file, skip_camera_pose):
         """ Return an etree of this Building in SDF starting from a template"""

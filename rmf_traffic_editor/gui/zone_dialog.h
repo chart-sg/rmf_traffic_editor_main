@@ -18,11 +18,11 @@
 #ifndef ZONE_DIALOG_H
 #define ZONE_DIALOG_H
 
+#include <string>
 #include <vector>
 
 #include <QDialog>
 #include <QObject>
-#include <QRadioButton>
 
 #include "zone.h"
 #include "building.h"
@@ -47,57 +47,56 @@ private:
 
   Zone _zone_copy;
   std::vector<QString> _level_names;
-  std::vector<QString> _vertex_names;
-  std::vector<double> _vertex_x;
-  std::vector<double> _vertex_y;
-  std::vector<double> _level_elevations;
 
   QLineEdit* _name_line_edit;
-  QComboBox* _internal_vertex_combo_box;
-  QComboBox* _external_vertex_combo_box;
   QComboBox* _level_combo_box;
   QLineEdit* _x_line_edit;
   QLineEdit* _y_line_edit;
   QLineEdit* _yaw_line_edit;
   QLineEdit* _width_line_edit;
   QLineEdit* _depth_line_edit;
-  QComboBox* _priority_box;
-  QCheckBox* _exit_lanecheckbox;
-  QCheckBox* _entry_lanecheckbox;
+
   QCheckBox* _vertexcheckbox;
+  QCheckBox* _lanecheckbox;
 
-  QTableWidget* _vertex_table;
-  QTableWidget* _transition_lane_table;
-
+  QTableWidget* _internal_vertex_table;
+  QTableWidget* _external_vertex_table;
   QGraphicsView* _zone_view;
   QGraphicsScene* _zone_scene;
 
   QPushButton* _ok_button, * _cancel_button;
 
-  void update_vertex_table();
-  void set_vertex_cell(const int row, const int col, const QString& text);
-  void vertex_table_cell_changed(int row, int col);
-
-  void update_transition_lane_table();
-  void transition_lane_table_cell_changed(int row, int col);
+  void update_in_vertex_table();
+  void update_ex_vertex_table();
+  void in_vertex_table_cell_changed(int row, int col);
 
   void update_zone_view();
 
-  void update_internal_vertex_combobox();
-
-  /// True if internal_vertex names a zone vertex and external_vertex a level vertex (not placeholders).
-  bool transition_lane_vertices_valid(const ZoneTransitionLane& lane) const;
-  /// True if some valid entry lane row differs from some valid exit lane row.
-  bool has_valid_entry_and_exit_transition_lanes() const;
-  /// True if zone name is unique
   bool is_zone_name_unique(const std::string& name) const;
 
-  /// Internal vertices that are outside the zone.
-  std::vector<std::string> vertices_outside_zone() const;
+  /// True if no vertex in the given list, other than ignore_index, uses name.
+  template<typename VertexT>
+  bool is_vertex_name_unique(
+    const std::vector<VertexT>& vertices,
+    const std::string& name,
+    int ignore_index) const
+  {
+    for (std::size_t i = 0; i < vertices.size(); ++i)
+    {
+      if (static_cast<int>(i) == ignore_index)
+        continue;
+
+      if (vertices[i].name == name)
+        return false;
+    }
+    return true;
+  }
+
+  bool level_has_vertex(
+    const std::string& level_name,
+    const std::string& vertex_name) const;
 
   bool confirm_warning(const QString& text);
-
-  bool is_vertex_name_unique(const std::string& name, int ignore_index) const;
 
 private slots:
   void ok_button_clicked();

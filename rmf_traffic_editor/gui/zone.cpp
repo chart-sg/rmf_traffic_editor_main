@@ -25,7 +25,7 @@
 #include "zone.h"
 using std::string;
 
-YAML::Node ZoneVertex::to_yaml() const
+YAML::Node InternalVertex::to_yaml() const
 {
   YAML::Node n;
   n["x"] = std::round(x * 1000.0) / 1000.0;
@@ -36,34 +36,33 @@ YAML::Node ZoneVertex::to_yaml() const
   return n;
 }
 
-void ZoneVertex::from_yaml(const std::string& _name, const YAML::Node& data)
+void InternalVertex::from_yaml(const std::string& _name, const YAML::Node& data)
 {
   if (!data.IsMap())
-    throw std::runtime_error("ZoneVertex::from_yaml() expected a map");
+    throw std::runtime_error("InternalVertex::from_yaml() expected a map");
   name = _name;
   x = data["x"].as<double>();
   y = data["y"].as<double>();
-  priority = data["priority"].as<std::size_t>();
+  priority = data["priority"].as<uint>();
   group = data["group"].as<std::string>();
 }
 
-YAML::Node ZoneTransitionLane::to_yaml() const
+YAML::Node ExternalVertex::to_yaml() const
 {
   YAML::Node n;
-  n["internal_vertex"] = internal_vertex;
-  n["external_vertex"] = external_vertex;
-  n["is_exit_lane"] = is_exit_lane;
-  n["is_entry_lane"] = is_entry_lane;
+  n["is_entry_point"] = is_entry_point;
+  n["is_exit_point"] = is_exit_point;
 
   return n;
 }
 
-void ZoneTransitionLane::from_yaml(const YAML::Node& data)
+void ExternalVertex::from_yaml(const std::string& _name, const YAML::Node& data)
 {
-  is_exit_lane = data["is_exit_lane"].as<bool>();
-  is_entry_lane = data["is_entry_lane"].as<bool>();
-  external_vertex = data["external_vertex"].as<std::string>();
-  internal_vertex = data["internal_vertex"].as<std::string>();
+  if (!data.IsMap())
+    throw std::runtime_error("ExternalVertex::from_yaml() expected a map");
+  name = _name;
+  is_entry_point = data["is_entry_point"].as<bool>();
+  is_exit_point = data["is_exit_point"].as<bool>();
 }
 
 Zone::Zone()
@@ -87,7 +86,7 @@ void Zone::from_yaml(
   {
     if (map_level.name == level)
     {
-      zone_elevation = map_level.elevation;
+      elevation = map_level.elevation;
       break;
     }
   }
@@ -95,27 +94,27 @@ void Zone::from_yaml(
   width = data["width"].as<double>();
   depth = data["depth"].as<double>();
 
-  if (data["vertices"] && data["vertices"].IsMap())
+  if (data["internal_vertices"] && data["internal_vertices"].IsMap())
   {
-    const YAML::Node& yd = data["vertices"];
-    for (YAML::const_iterator it = yd.begin(); it != yd.end(); ++it)
+    const YAML::Node& v = data["internal_vertices"];
+    for (YAML::const_iterator it = v.begin(); it != v.end(); ++it)
     {
-      ZoneVertex vertex;
-      vertex.from_yaml(it->first.as<string>(), it->second);
-      vertices.push_back(vertex);
+      InternalVertex iv;
+      iv.from_yaml(it->first.as<string>(), it->second);
+      internal_vertices.push_back(iv);
     }
   }
 
-  if (data["transition_lanes"] && data["transition_lanes"].IsSequence())
+  if (data["external_vertices"] && data["external_vertices"].IsMap())
   {
-    for (const auto& lane : data["transition_lanes"])
+    const YAML::Node& v = data["external_vertices"];
+    for (YAML::const_iterator it = v.begin(); it != v.end(); ++it)
     {
-      ZoneTransitionLane transition_lane;
-      transition_lane.from_yaml(lane);
-      transition_lanes.push_back(transition_lane);
+      ExternalVertex ev;
+      ev.from_yaml(it->first.as<string>(), it->second);
+      external_vertices.push_back(ev);
     }
   }
-
 }
 
 YAML::Node Zone::to_yaml() const
@@ -129,12 +128,13 @@ YAML::Node Zone::to_yaml() const
   n["width"] = std::round(width * 1000.0) / 1000.0;
   n["depth"] = std::round(depth * 1000.0) / 1000.0;
 
-  n["vertices"] = YAML::Node(YAML::NodeType::Map);
-  for (const auto& vertex : vertices)
-    n["vertices"][vertex.name] = vertex.to_yaml();
-  n["transition_lanes"] = YAML::Node(YAML::NodeType::Sequence);
-  for (const auto& transition_lane : transition_lanes)
-    n["transition_lanes"].push_back(transition_lane.to_yaml());
+  n["internal_vertices"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto& iv : internal_vertices)
+    n["internal_vertices"][iv.name] = iv.to_yaml();
+
+  n["external_vertices"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto& ev : external_vertices)
+    n["external_vertices"][ev.name] = ev.to_yaml();
   return n;
 }
 
@@ -142,33 +142,31 @@ void Zone::draw(
   QGraphicsScene* scene,
   const double meters_per_pixel,
   const string& level_name,
-  const double elevation,
   const bool apply_transformation,
-  const double scale,
-  const double translate_x,
-  const double translate_y) const
+  const std::vector<Vertex>& level_vertices) const
 {
-  if (!show_zone)
+  if (!show_zone && apply_transformation)
     return;
 
-  if (elevation != zone_elevation)
+  if (level_name != level && apply_transformation)
     return;
-  const double cabin_w = width / meters_per_pixel;
-  const double cabin_d = depth / meters_per_pixel;
-  QPen cabin_pen(Qt::black);
-  cabin_pen.setWidth(0.05 / meters_per_pixel);
 
-  QGraphicsRectItem* cabin_rect = new QGraphicsRectItem(
-    -cabin_w / 2.0,
-    -cabin_d / 2.0,
-    cabin_w,
-    cabin_d);
-  cabin_rect->setPen(cabin_pen);
-  cabin_rect->setBrush(QBrush(QColor::fromRgbF(0.3, 0.3, 1.0, 0.2)));
-  scene->addItem(cabin_rect);
+  const double zone_w = width / meters_per_pixel;
+  const double zone_d = depth / meters_per_pixel;
+  QPen zone_pen(Qt::black);
+  zone_pen.setWidth(0.05 / meters_per_pixel);
+
+  QGraphicsRectItem* zone_rect = new QGraphicsRectItem(
+    -zone_w / 2.0,
+    -zone_d / 2.0,
+    zone_w,
+    zone_d);
+  zone_rect->setPen(zone_pen);
+  zone_rect->setBrush(QBrush(QColor::fromRgbF(0.3, 0.3, 1.0, 0.2)));
+  scene->addItem(zone_rect);
 
   QList<QGraphicsItem*> items;
-  items.append(cabin_rect);
+  items.append(zone_rect);
 
   if (!name.empty())
   {
@@ -177,64 +175,180 @@ void Zone::draw(
     QGraphicsSimpleTextItem* text_item = scene->addSimpleText(
       QString::fromStdString(name), font);
     text_item->setBrush(QColor(255, 0, 0, 255));
-    text_item->setPos(-cabin_w / 3.0, 0.0);
+    text_item->setPos(-zone_w / 3.0, 0.0);
     items.append(text_item);
   }
 
-  for (const auto& vertex : vertices)
+  const double radius = 0.1 / meters_per_pixel;
+
+  QFont name_font("Helvetica");
+  name_font.setPointSize(0.1 / meters_per_pixel);
+  QFont annotate_font("Helvetica");
+  annotate_font.setPointSize(0.15 / meters_per_pixel);
+  QPen vertex_pen(Qt::black);
+  vertex_pen.setWidthF(radius / 2.0);
+  const QBrush vertex_brush = QBrush(
+    QColor::fromRgbF(0.0, 0.0, 0.0, 0.5));
+
+  if (apply_transformation)
   {
     if (show_vertices)
     {
-      QPen vertex_pen(Qt::black);
-      double radius = 0.1 / meters_per_pixel;
-      vertex_pen.setWidthF(radius / 2.0);
+      for (const auto& iv : internal_vertices)
+      {
+        QGraphicsEllipseItem* ellipse_item = scene->addEllipse(
+          iv.x /meters_per_pixel - radius,
+          iv.y /meters_per_pixel - radius,
+          2 * radius,
+          2 * radius,
+          vertex_pen,
+          vertex_brush);
+        ellipse_item->setZValue(20.0);
+        items.append(ellipse_item);
 
-      QColor nonselected_color(QColor::fromRgbF(0.0, 0.0, 0.0));
-      nonselected_color.setAlphaF(0.5);
+        QGraphicsSimpleTextItem* annotate_text_item = scene->addSimpleText(
+          QString::fromStdString(iv.group + "/p" + std::to_string(iv.priority)),
+          annotate_font);
+        annotate_text_item->setBrush(QColor(255, 0, 0, 255));
+        annotate_text_item->setPos(
+          iv.x /meters_per_pixel + radius,
+          iv.y /meters_per_pixel - 3.0 * radius);
+        annotate_text_item->setZValue(95.0);
+        items.append(annotate_text_item);
 
-      const QBrush vertex_brush = QBrush(nonselected_color);
+        QGraphicsSimpleTextItem* name_text_item = scene->addSimpleText(
+          QString::fromStdString(iv.name),
+          name_font);
+        name_text_item->setBrush(QColor(255, 0, 0, 255));
+        name_text_item->setPos(
+          iv.x /meters_per_pixel + radius,
+          iv.y /meters_per_pixel + radius);
+        name_text_item->setZValue(95.0);
+        items.append(name_text_item);
+      }
+    }
+
+    if (show_lanes)
+    {
+      const double lane_pen_width = 0.5 / meters_per_pixel;
+      QPen lane_pen(QBrush(QColor::fromRgbF(0.0, 0.0, 0.0, 0.3)),
+        lane_pen_width);
+      lane_pen.setCapStyle(Qt::RoundCap);
+      const QPen arrow_pen(
+        QBrush(QColor::fromRgbF(0.0, 0.0, 0.0, 0.3)), lane_pen_width / 8.0);
+
+      for (const auto& ev : external_vertices)
+      {
+        if (!ev.is_entry_point && !ev.is_exit_point)
+          continue;
+
+        const Vertex* v = nullptr;
+        for (const auto& lv : level_vertices)
+        {
+          if (lv.name == ev.name)
+          {
+            v = &lv;
+            break;
+          }
+        }
+        if (v == nullptr)
+          continue;
+
+        const double dx = v->x - x;
+        const double dy = v->y - y;
+        const double ex = std::cos(yaw) * dx - std::sin(yaw) * dy;
+        const double ey = std::sin(yaw) * dx + std::cos(yaw) * dy;
+
+        for (const auto& iv : internal_vertices)
+        {
+          const double ix = iv.x / meters_per_pixel;
+          const double iy = iv.y / meters_per_pixel;
+
+          QGraphicsLineItem* lane_item = scene->addLine(ex, ey, ix, iy,
+              lane_pen);
+          items.append(lane_item);
+
+          // only draw arrows if it's a unidirectional lane
+          if (ev.is_entry_point == ev.is_exit_point)
+            continue;
+
+          const double start_x = ev.is_entry_point ? ex : ix;
+          const double start_y = ev.is_entry_point ? ey : iy;
+          const double end_x = ev.is_entry_point ? ix : ex;
+          const double end_y = ev.is_entry_point ? iy : ey;
+          const double len = std::sqrt(
+            (end_x - start_x) * (end_x - start_x)
+            + (end_y - start_y) * (end_y - start_y));
+          if (len < 1e-6)
+            continue;
+
+          const double norm_x = (end_x - start_x) / len;
+          const double norm_y = (end_y - start_y) / len;
+          const double arrow_w = lane_pen_width / 2.5;
+          const double arrow_l = lane_pen_width / 2.5;
+          const double arrow_spacing = lane_pen_width * 4.0;
+
+          for (double d = 0.0; d < len; d += arrow_spacing)
+          {
+            // first calculate the center vertex of this arrowhead
+            const double cx = start_x + d * norm_x;
+            const double cy = start_y + d * norm_y;
+            // one edge vertex of arrowhead
+            const double e1x = cx - arrow_w * norm_y;
+            const double e1y = cy + arrow_w * norm_x;
+            // another edge vertex of arrowhead
+            const double e2x = cx + arrow_w * norm_y;
+            const double e2y = cy - arrow_w * norm_x;
+            // tip of arrowhead
+            const double tx = cx + arrow_l * norm_x;
+            const double ty = cy + arrow_l * norm_y;
+            // now add arrowhead lines
+            items.append(scene->addLine(e1x, e1y, tx, ty, arrow_pen));
+            items.append(scene->addLine(e2x, e2y, tx, ty, arrow_pen));
+          }
+        }
+      }
+    }
+
+    QGraphicsItemGroup* group = scene->createItemGroup(items);
+    group->setZValue(95.0);
+    group->setPos(x, y);
+    group->setRotation(-180.0 / 3.1415926 * yaw);
+  }
+  else if (show_vertices)
+  {
+    for (std::size_t i = 0; i < internal_vertices.size(); i++)
+    {
+      const InternalVertex& vertex = internal_vertices[i];
+      const double px = vertex.x / meters_per_pixel;
+      const double py = vertex.y / meters_per_pixel;
 
       QGraphicsEllipseItem* ellipse_item = scene->addEllipse(
-        vertex.x /meters_per_pixel - radius,
-        vertex.y /meters_per_pixel - radius,
+        px - radius,
+        py - radius,
         2 * radius,
         2 * radius,
         vertex_pen,
         vertex_brush);
-      ellipse_item->setZValue(20.0);  // above all lane/wall edges
+      ellipse_item->setZValue(20.0);
 
-      // add some icons depending on the superpowers of this vertex
-      QPen annotation_pen(Qt::black);
-      annotation_pen.setWidthF(radius / 4.0);
+      QGraphicsSimpleTextItem* name_item = scene->addSimpleText(
+        QString::fromStdString(vertex.name),
+        name_font);
+      name_item->setBrush(QColor(255, 0, 0, 255));
+      name_item->setPos(px + radius, py + radius);
+      name_item->setZValue(30.0);
 
-      items.append(ellipse_item);
-
-      QFont font("Helvetica");
-      font.setPointSize(0.15 / meters_per_pixel);
-      QGraphicsSimpleTextItem* priority_text_item = scene->addSimpleText(
-        QString::number(vertex.priority), font);
-      priority_text_item->setBrush(QColor(255, 0, 0, 255));
-      priority_text_item->setPos(vertex.x /meters_per_pixel - radius,
-        vertex.y /meters_per_pixel - radius);
-      priority_text_item->setZValue(30.0);
-      items.append(priority_text_item);
-
-      font.setPointSize(0.1 / meters_per_pixel);
-      QGraphicsSimpleTextItem* name_text_item = scene->addSimpleText(
-        QString::fromStdString(vertex.name), font);
-      name_text_item->setBrush(QColor(255, 0, 0, 255));
-      name_text_item->setPos(vertex.x /meters_per_pixel + radius,
-        vertex.y /meters_per_pixel + radius);
-      name_text_item->setZValue(30.0);
-      items.append(name_text_item);
+      if (!vertex.group.empty())
+      {
+        QGraphicsSimpleTextItem* annotate_text_item = scene->addSimpleText(
+          QString::fromStdString(
+            vertex.group + "/p" + std::to_string(vertex.priority)),
+          annotate_font);
+        annotate_text_item->setBrush(QColor(255, 0, 0, 255));
+        annotate_text_item->setPos(px + radius, py - 3.0 * radius);
+        annotate_text_item->setZValue(30.0);
+      }
     }
-  }
-
-  QGraphicsItemGroup* group = scene->createItemGroup(items);
-  group->setZValue(95.0);
-  if (apply_transformation)
-  {
-    group->setPos(x * scale + translate_x, y * scale + translate_y);
-    group->setRotation(-180.0 / 3.1415926 * yaw);
   }
 }
