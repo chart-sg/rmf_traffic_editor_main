@@ -9,7 +9,7 @@ class Zone:
         self.level = str(yaml_node['level'])
         self.depth = float(yaml_node['depth'])
         self.width = float(yaml_node['width'])
-        self.yaw = float(yaml_node['yaw'])
+        self.yaw = (float(yaml_node['yaw']) + transform.rotation)
 
         # Calculating the center of the zone
         self.raw_pos = (
