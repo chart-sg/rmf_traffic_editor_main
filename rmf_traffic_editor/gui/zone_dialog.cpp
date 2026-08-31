@@ -451,6 +451,33 @@ void ZoneDialog::ok_button_clicked()
       return;
     }
 
+    for (const auto& level : _building.levels)
+    {
+      if (!is_vertex_name_unique(level.vertices, iv.name))
+      {
+        QMessageBox::critical(this, "Error",
+          QString::fromStdString(
+            "Vertex name [" + iv.name + "] already exists on level [" +
+            level.name + "]. Internal vertex names must be unique."));
+        return;
+      }
+    }
+
+    for (const auto& zone : _building.zones)
+    {
+      if (&zone == &_zone)
+        continue;
+
+      if (!is_vertex_name_unique(zone.internal_vertices, iv.name))
+      {
+        QMessageBox::critical(this, "Error",
+          QString::fromStdString(
+            "Vertex name [" + iv.name + "] is already used by zone [" +
+            zone.name + "]. Internal vertex names must be unique."));
+        return;
+      }
+    }
+
     if (!is_vertex_name_unique(_zone.internal_vertices, iv.name, i))
     {
       QMessageBox::critical(this, "Error",

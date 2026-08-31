@@ -79,7 +79,7 @@ private:
   bool is_vertex_name_unique(
     const std::vector<VertexT>& vertices,
     const std::string& name,
-    int ignore_index) const
+    int ignore_index = -1) const
   {
     for (std::size_t i = 0; i < vertices.size(); ++i)
     {

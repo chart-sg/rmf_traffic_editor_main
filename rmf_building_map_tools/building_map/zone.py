@@ -39,22 +39,6 @@ class Zone:
         local_y = -s * dx + c * dy
         return abs(local_x) <= self.width / 2 and abs(local_y) <= self.depth / 2
 
-    def construct_unique_vertex_name(self, vertex_name, vertices_yaml):
-        # Defining the name of the vertices.
-        # The formatting for now is:
-        # <zone_name>#<group>#<priority>#<vertex_name>
-
-        vertex_yaml = vertices_yaml[vertex_name]
-        return (
-            self.name
-            + '#'
-            + vertex_yaml['group']
-            + '#p'
-            + str(vertex_yaml['priority'])
-            + '#'
-            + vertex_name
-        )
-
     def parse_internal_vertices(self, yaml_node):
         vertices = {}
         for vertex_name, vertex_yaml in yaml_node.items():
@@ -68,12 +52,8 @@ class Zone:
                 - vertex_yaml['y'] * np.cos(self.yaw)
                 + self.y
             )
-            unique_vertex_name = self.construct_unique_vertex_name(
-                vertex_name, yaml_node
-            )
-
             vertices[vertex_name] = {
-                'name': unique_vertex_name,
+                'name': vertex_name,
                 'location': [float(x), float(y)],
                 'priority': int(vertex_yaml['priority']),
                 'group': vertex_yaml['group'],
