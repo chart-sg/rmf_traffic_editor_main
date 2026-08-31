@@ -269,11 +269,11 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
   QVBoxLayout* left_vbox = new QVBoxLayout;
   left_vbox->addLayout(name_hbox);
   left_vbox->addLayout(level_hbox);
-  left_vbox->addLayout(width_hbox);
-  left_vbox->addLayout(depth_hbox);
   left_vbox->addLayout(x_hbox);
   left_vbox->addLayout(y_hbox);
   left_vbox->addLayout(yaw_hbox);
+  left_vbox->addLayout(width_hbox);
+  left_vbox->addLayout(depth_hbox);
   left_vbox->addWidget(_internal_vertex_table);
   left_vbox->addWidget(_external_vertex_table);
 
