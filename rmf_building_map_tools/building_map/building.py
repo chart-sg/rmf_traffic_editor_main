@@ -433,7 +433,7 @@ class Building:
                     continue
 
                 g['zones'][zone_name] = {
-                    'dims': [zone.depth, zone.width],
+                    'dims': [zone.width, zone.depth],
                     'position': [zone.x, zone.y],
                     'orientation': zone.yaw,
                     'level': zone.level,
